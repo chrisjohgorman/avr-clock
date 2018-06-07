@@ -1,0 +1,5 @@
+- incorporate interrupt to set day month and year automatically
+- calculate weekdays to make the 
+	second sunday in march 2am becomes 3am for daylight saving
+	first sunday in november 2am becomes 1am for daylight savings
+
