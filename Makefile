@@ -34,7 +34,7 @@ F_CPU = 4000000
 
 
 # Target file name (without extension).
-TARGET =  test_lcd
+TARGET =  clock
 
 
 # List C source files here. (C dependencies are automatically generated.)

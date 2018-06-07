@@ -18,128 +18,97 @@ Hardware: HD44780 compatible LCD text display
 ** function prototypes
 */ 
 void wait_until_key_pressed(void);
+void lcd_update_clock(void);
+void lcd_update_date(void);
 
+/*
+ * Add hour minute second
+ */
+volatile unsigned char hours = 20;
+volatile unsigned char minutes = 36;
+volatile unsigned char seconds = 02;
+
+/*
+ * Interrupt service routine
+ */
+ISR(TIMER1_COMPA_vect);
 
 void wait_until_key_pressed(void)
 {
-    unsigned char temp1, temp2;
+    	unsigned char temp1, temp2;
     
-    do {
-        temp1 = PIND;                  // read input
-        _delay_ms(5);                  // delay for key debounce
-        temp2 = PIND;                  // read input
-        temp1 = (temp1 & temp2);       // debounce input
-    } while ( temp1 & _BV(PIND2) );
+    	do {
+        	temp1 = PIND;                  // read input
+        	_delay_ms(5);                  // delay for key debounce
+        	temp2 = PIND;                  // read input
+        	temp1 = (temp1 & temp2);       // debounce input
+    	} while ( temp1 & _BV(PIND2) );
     
-    loop_until_bit_is_set(PIND,PIND2);            /* wait until key is released */
+    	loop_until_bit_is_set(PIND,PIND2);     /* wait until key is released */
 }
 
 
 int main(void)
 {
-    char buffer[7];
-    int  num=134;
-    
-    DDRD &=~ (1 << PD2);        /* Pin PD2 input              */
-    PORTD |= (1 << PD2);        /* Pin PD2 pull-up enabled    */
+    	DDRD &=~ (1 << PD2);        /* Pin PD2 input              */
+    	PORTD |= (1 << PD2);        /* Pin PD2 pull-up enabled    */
 
+        TCCR1B = (1<<CS12|1<<WGM12);
+	OCR1A = 15625-1;
+	TIMSK = 1<<OCIE1A;
+	sei();
 
-    /* initialize display, cursor off */
-    lcd_init(LCD_DISP_ON);
-
-    for (;;) {                           /* loop forever */
-        /* 
-         * Test 1:  write text to display
-         */
-
-        /* clear display and home cursor */
+    	/* initialize display, cursor off */
+    	lcd_init(LCD_DISP_ON);
         lcd_clrscr();
-        
-        /* put string to display (line 1) with linefeed */
-        lcd_puts("Jun 6, 2018\n");
 
-        /* cursor is now on second line, write second line */
-        lcd_puts("16:52:00");
-        
-        /* move cursor to position 8 on line 2 */
-        lcd_gotoxy(7,1);  
-        
-        /* write single char to display */
-        //lcd_putc(':');
-        
-        /* wait until push button PD2 (INT0) is pressed */
-        wait_until_key_pressed();
-        
-        
-        /*
-         * Test 2: use lcd_command() to turn on cursor
-         */
-        
-        /* turn on cursor */
-        lcd_command(LCD_DISP_ON_CURSOR);
-
-        /* put string */
-        lcd_puts( "CurOn");
-        
-        /* wait until push button PD2 (INT0) is pressed */
-        wait_until_key_pressed();
-
-
-        /*
-         * Test 3: display shift
-         */
-        
-        lcd_clrscr();     /* clear display home cursor */
-
-        /* put string from program memory to display */
-        lcd_puts_P( "Line 1 longer than 14 characters\n" );
-        lcd_puts_P( "Line 2 longer than 14 characters" );
-        
-        /* move BOTH lines one position to the left */
-        lcd_command(LCD_MOVE_DISP_LEFT);
-        
-        /* wait until push button PD2 (INT0) is pressed */
-        wait_until_key_pressed();
-
-        /* turn off cursor */
-        lcd_command(LCD_DISP_ON);
-        
-        
-        /*
-         *   Test: Display integer values
-         */
-        
-        lcd_clrscr();   /* clear display home cursor */
-        
-        /* convert interger into string */
-        itoa( num , buffer, 10);
-        
-        /* put converted string to display */
-        lcd_puts(buffer);
-        
-        /* wait until push button PD2 (INT0) is pressed */
-        wait_until_key_pressed();
-        
-        
-        /*
-         *  Test: Display userdefined characters
-         */
-
-       lcd_clrscr();   /* clear display home cursor */
-       
-       lcd_puts("Copyright: ");
-       
-       /* move cursor to position 0 on line 2 */
-       /* Note: this switched back to DD RAM adresses */
-       lcd_gotoxy(0,1);
-       
-       /* display user defined (c), built using two user defined chars */
-       lcd_putc(0);
-       lcd_putc(1);
-       
-
-       /* wait until push button PD2 (INT0) is pressed */
-       wait_until_key_pressed();
-              
+    	for (;;) {  
+       	 	/* put string to display (line 1) with linefeed */
     }
 }
+
+void lcd_update_date()
+{
+	lcd_clrscr();
+        lcd_puts("  Jun 6, 2018\n");
+}
+
+void lcd_update_clock() 
+{
+    	char buffer[7];
+
+	lcd_gotoxy(4,1);  
+        itoa( hours , buffer, 10);
+        lcd_puts(buffer);
+        lcd_putc(':');
+	if(minutes < 10)
+		lcd_putc('0');
+	itoa(minutes, buffer, 10);
+	lcd_puts(buffer);
+	lcd_putc(':');
+	if(seconds < 10)
+		lcd_putc('0');
+	itoa(seconds, buffer, 10);	
+	lcd_puts(buffer);
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+        seconds++;
+
+        if(seconds >= 60)
+        {
+                seconds -= 60;
+                minutes++;
+        }
+        if(minutes >= 60)
+        {
+                minutes = 60;
+                hours++;
+        }
+        if(hours > 23)
+                hours -= 24;
+	lcd_update_date();
+	lcd_update_clock();
+}
+
