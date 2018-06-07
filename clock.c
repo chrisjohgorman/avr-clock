@@ -1,7 +1,7 @@
 /*************************************************************************
-Title:    Testing output to a HD44780 based LCD display.
-Author:   Peter Fleury  <pfleury@gmx.ch>  http://tinyurl.com/peterfleury
-File:     $Id: test_lcd.c,v 1.8 2015/01/31 18:04:08 peter Exp $
+Title:    Clock routine
+Author:   Chris Gorman <chrisjohgorman@gmail.com>
+File:     clock.c
 Software: AVR-GCC 4.x
 Hardware: HD44780 compatible LCD text display
           AVR with external SRAM interface if memory-mapped LCD interface is used
@@ -24,9 +24,9 @@ void lcd_update_date(void);
 /*
  * Add hour minute second
  */
-volatile unsigned char hours = 20;
-volatile unsigned char minutes = 36;
-volatile unsigned char seconds = 02;
+volatile unsigned char hours = 0;
+volatile unsigned char minutes = 16;
+volatile unsigned char seconds = 50;
 
 /*
  * Interrupt service routine
@@ -70,7 +70,7 @@ int main(void)
 void lcd_update_date()
 {
 	lcd_clrscr();
-        lcd_puts("  Jun 6, 2018\n");
+        lcd_puts("Thu Jun 7, 2018\n");
 }
 
 void lcd_update_clock() 
@@ -78,17 +78,19 @@ void lcd_update_clock()
     	char buffer[7];
 
 	lcd_gotoxy(4,1);  
-        itoa( hours , buffer, 10);
+        itoa(hours/10, buffer, 10);
+        lcd_puts(buffer);
+        itoa(hours%10 , buffer, 10);
         lcd_puts(buffer);
         lcd_putc(':');
-	if(minutes < 10)
-		lcd_putc('0');
-	itoa(minutes, buffer, 10);
+	itoa(minutes/19, buffer, 10);
+	lcd_puts(buffer);
+	itoa(minutes%10, buffer, 10);
 	lcd_puts(buffer);
 	lcd_putc(':');
-	if(seconds < 10)
-		lcd_putc('0');
-	itoa(seconds, buffer, 10);	
+	itoa(seconds/10, buffer, 10);	
+	lcd_puts(buffer);
+	itoa(seconds%10, buffer, 10);	
 	lcd_puts(buffer);
 }
 
