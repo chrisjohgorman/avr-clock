@@ -31,10 +31,10 @@ char leap_year(int);
  */
 volatile unsigned int year = 2018;
 volatile unsigned char month = 6;
-volatile unsigned char day = 7;
-volatile unsigned char hour = 0;
-volatile unsigned char minute = 19;
-volatile unsigned char second = 50;
+volatile unsigned char day = 8;
+volatile unsigned char hour = 18;
+volatile unsigned char minute = 49;
+volatile unsigned char second = 00;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
 
@@ -71,10 +71,11 @@ int main(void)
     	DDRD &=~ (1 << PD2);        /* Pin PD2 input              */
     	PORTD |= (1 << PD2);        /* Pin PD2 pull-up enabled    */
 
-        TCCR1B = (1<<CS12|1<<WGM12);
-	OCR1A = 15625-1;
-	TIMSK = 1<<OCIE1A;
+       	TCCR1B |= (1 << WGM12);
+	TIMSK |= (1 << OCIE1A);
 	sei();
+	OCR1A = 16525-1;
+       	TCCR1B |= ((1 << CS10) | (1 << CS11));
 
     	/* initialize display, cursor off */
     	lcd_init(LCD_DISP_ON);
@@ -187,47 +188,6 @@ void lcd_update_clock()
 	itoa(second%10, buffer, 10);	 
 	lcd_puts(buffer);
 }
-/*
-ISR(TIMER1_COMPA_vect)
-{
-        second++;
-
-        if(second >= 60)
-        {
-                second -= 60;
-                minute++;
-        }
-        if(minute >= 60)
-        {
-                minute = 60;
-                hour++;
-        }
-        if(hour > 23) {
-                hour -= 24;
-		day++;
-	}
-	if(((leap_year(year) && day == 29) && month == 2)) {
-		day = 1;
-		month++;
-	} else if (((!leap_year(year) && day == 28) && month == 2)) {
-		day = 1;
-		month++;
-	} else if (day == 30 && 
-		(month == 4 || month == 6 || month == 9 || month == 11)) {
-		day = 1;
-		month++;
-	} else if (day == 31) {
-		day = 1;
-		month++;
-	}
-	if(month > 12) {
-		month = 0;
-		year++;
-	}
-	lcd_update_date();
-	lcd_update_clock();
-} */
-
 
 ISR(TIMER1_COMPA_vect)
 {
