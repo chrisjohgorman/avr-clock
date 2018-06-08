@@ -20,6 +20,8 @@ Hardware: HD44780 compatible LCD text display
 void wait_until_key_pressed(void);
 void lcd_update_clock(void);
 void lcd_update_date(void);
+char spring_savings(void);
+char fall_savings(void);
 char day_of_week(int, char, char);
 char day_of_month(int, char, char, char);
 char leap_year(int);
@@ -27,13 +29,14 @@ char leap_year(int);
 /*
  * Add hour minute second
  */
-unsigned int year = 2018;
-unsigned char month = 6;
-unsigned char day = 7;
-unsigned char hour = 0;
-unsigned char minute = 16;
+volatile unsigned int year = 2018;
+volatile unsigned char month = 6;
+volatile unsigned char day = 7;
+volatile unsigned char hour = 0;
+volatile unsigned char minute = 16;
 volatile unsigned char second = 50;
 volatile unsigned char lastdom;
+volatile unsigned char daylight_time = 0;
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
@@ -124,6 +127,16 @@ char day_of_month(int year, char month, char dow, char week){
   	return target_date;
 }
 
+char fall_savings(void) {
+	/* return the day of the first sunday in november */
+	return (day_of_month(year,month,day_of_week(year,month,day), 0));
+}
+
+char spring_savings(void) {
+	/* return the day of the second sunday in march */
+	return (day_of_month(year,month,day_of_week(year,month,day), 1));
+}
+
 char leap_year(int year) {
 	return (((year%4 == 0 && year%100 != 0) || year%400 ==0));
 }
@@ -204,10 +217,27 @@ ISR(TIMER1_COMPA_vect)
                 if(minute > 59)
                 {
                         minute = 0;
+			/*
+			 * first sunday in november decrement hour at 2 am
+			 * second sunday in march increment hour at 2 am
+			 * (twice)
+			 */
+			if((daylight_time == 0) && (month == 3) && 
+					(hour == 2) && 
+					(day == spring_savings())) {
+				hour++;
+				daylight_time = 1;
+			} else if((daylight_time == 0) && (month == 11) && 
+					(hour == 2) && 
+					(day == spring_savings())) {
+				hour--;
+				daylight_time = 1;
+			}
                         hour++;
                         if(hour > 23) {
                                 hour = 0;
                                 day++;
+				daylight_time = 0;
                                 if(!leap_year(year))
                                         lastdom = daytab[0][month -1];
                                 else
