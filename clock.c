@@ -33,7 +33,7 @@ volatile unsigned int year = 2018;
 volatile unsigned char month = 6;
 volatile unsigned char day = 7;
 volatile unsigned char hour = 0;
-volatile unsigned char minute = 16;
+volatile unsigned char minute = 19;
 volatile unsigned char second = 50;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
@@ -154,7 +154,7 @@ void lcd_update_clock()
         itoa(hour%10 , buffer, 10);
         lcd_puts(buffer);
         lcd_putc(':');
-	itoa(minute/19, buffer, 10);
+	itoa(minute/10, buffer, 10);
 	lcd_puts(buffer);
 	itoa(minute%10, buffer, 10);
 	lcd_puts(buffer);
