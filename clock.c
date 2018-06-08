@@ -223,13 +223,13 @@ ISR(TIMER1_COMPA_vect)
 			 * (twice)
 			 */
 			if((daylight_time == 0) && (month == 3) && 
-					(hour == 2) && 
+					(hour == 1) && 
 					(day == spring_savings())) {
 				hour++;
 				daylight_time = 1;
 			} else if((daylight_time == 0) && (month == 11) && 
-					(hour == 2) && 
-					(day == spring_savings())) {
+					(hour == 1) && 
+					(day == fall_savings())) {
 				hour--;
 				daylight_time = 1;
 			}
@@ -237,7 +237,6 @@ ISR(TIMER1_COMPA_vect)
                         if(hour > 23) {
                                 hour = 0;
                                 day++;
-				daylight_time = 0;
                                 if(!leap_year(year))
                                         lastdom = daytab[0][month -1];
                                 else
