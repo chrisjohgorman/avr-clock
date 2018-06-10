@@ -31,9 +31,9 @@ char leap_year(int);
  */
 volatile unsigned int year = 2018;
 volatile unsigned char month = 6;
-volatile unsigned char day = 8;
-volatile unsigned char hour = 18;
-volatile unsigned char minute = 49;
+volatile unsigned char day = 10;
+volatile unsigned char hour = 12;
+volatile unsigned char minute = 22;
 volatile unsigned char second = 00;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
@@ -94,7 +94,7 @@ void lcd_update_date()
 	weekday = day_of_week(year, month, day);
 	lcd_puts(weekdays[weekday]);
 	lcd_putc(' ');
-	lcd_puts(months[month]);
+	lcd_puts(months[month -1]);
 	lcd_putc(' ');
 	itoa(day, buffer, 10);
 	lcd_puts(buffer);
