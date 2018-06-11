@@ -12,6 +12,7 @@ Hardware: HD44780 compatible LCD text display
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include "lcd.h"
 
 /*
@@ -20,6 +21,13 @@ Hardware: HD44780 compatible LCD text display
 void wait_until_key_pressed(void);
 void lcd_update_clock(void);
 void lcd_update_date(void);
+void lcd_update_second(void);
+void lcd_update_minute(void);
+void lcd_update_hour(void);
+void lcd_update_day(void);
+void lcd_update_weekday(void);
+void lcd_update_month(void);
+void lcd_update_year(void);
 char spring_savings(void);
 char fall_savings(void);
 char day_of_week(int, char, char);
@@ -31,9 +39,9 @@ char leap_year(int);
  */
 volatile unsigned int year = 2018;
 volatile unsigned char month = 6;
-volatile unsigned char day = 10;
-volatile unsigned char hour = 12;
-volatile unsigned char minute = 22;
+volatile unsigned char day = 11;
+volatile unsigned char hour = 15;
+volatile unsigned char minute = 13;
 volatile unsigned char second = 00;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
@@ -74,35 +82,94 @@ int main(void)
        	TCCR1B |= (1 << WGM12);
 	TIMSK |= (1 << OCIE1A);
 	sei();
+	//OCR1A = 32768 - 1; /* set CTC compare value to 1Hz at 32.768KHz 
+	//			with a prescaler of 1 (hex 0x7FFF) */
 	OCR1A = 16525-1;
-       	TCCR1B |= ((1 << CS10) | (1 << CS11));
+	//TCCR1B |= (1 << CS10) /* set to clk_io/1 (No prescaling) */
+       	TCCR1B |= ((1 << CS10) | (1 << CS11)); 
 
     	/* initialize display, cursor off */
     	lcd_init(LCD_DISP_ON);
         lcd_clrscr();
-
+	
+	//set_sleep_mode(SLEEP_MODE_IDLE);
     	for (;;) {  
+		//sleep_mode();
        	 	/* put string to display (line 1) with linefeed */
     }
 }
 
 void lcd_update_date()
-{
-	unsigned char weekday;
-	char buffer[7];
-	lcd_clrscr();
-	weekday = day_of_week(year, month, day);
-	lcd_puts(weekdays[weekday]);
+{	
+	lcd_update_weekday();
 	lcd_putc(' ');
-	lcd_puts(months[month -1]);
+	lcd_update_month();
 	lcd_putc(' ');
-	itoa(day, buffer, 10);
-	lcd_puts(buffer);
+	lcd_update_day();
 	lcd_putc(',');
 	lcd_putc(' ');
-        itoa(year, buffer, 10);
-	lcd_puts(buffer);
+	lcd_update_year();
 	lcd_putc('\n');
+}
+
+void lcd_update_month() 
+{
+	lcd_gotoxy(4,0);
+	lcd_puts(months[month -1]);
+}
+
+void lcd_update_day() 
+{
+	char buffer[7];
+	lcd_gotoxy(8,0);
+	itoa(day,buffer, 10);
+	lcd_puts(buffer);
+}
+
+void lcd_update_year() 
+{
+	char buffer[7];
+	lcd_gotoxy(12,0);
+	itoa(year,buffer, 10);
+	lcd_puts(buffer);
+}
+
+void lcd_update_weekday()
+{
+	unsigned char weekday;
+	weekday = day_of_week(year, month, day);
+	lcd_gotoxy(0,0);
+	lcd_puts(weekdays[weekday]);
+}
+
+void lcd_update_hour()
+{
+	char buffer[7];
+	lcd_gotoxy(4,1);
+        itoa(hour/10, buffer, 10);
+        lcd_puts(buffer);
+        itoa(hour%10 , buffer, 10);
+        lcd_puts(buffer);
+}
+
+void lcd_update_minute()
+{
+	char buffer[7];
+	lcd_gotoxy(7,1);
+	itoa(minute/10, buffer, 10);
+	lcd_puts(buffer);
+	itoa(minute%10, buffer, 10);
+	lcd_puts(buffer);
+}
+
+void lcd_update_second()
+{
+	char buffer[7];
+	lcd_gotoxy(10,1);
+	itoa(second/10, buffer, 10);	
+	lcd_puts(buffer);
+	itoa(second%10, buffer, 10);	 
+	lcd_puts(buffer);
 }
 
 char day_of_week(int year, char month, char day)
@@ -170,23 +237,11 @@ char leap_year(int year) {
 
 void lcd_update_clock() 
 {
-    	char buffer[7];
-
-	lcd_gotoxy(4,1);  
-        itoa(hour/10, buffer, 10);
-        lcd_puts(buffer);
-        itoa(hour%10 , buffer, 10);
-        lcd_puts(buffer);
+	lcd_update_hour();
         lcd_putc(':');
-	itoa(minute/10, buffer, 10);
-	lcd_puts(buffer);
-	itoa(minute%10, buffer, 10);
-	lcd_puts(buffer);
+	lcd_update_minute();
 	lcd_putc(':');
-	itoa(second/10, buffer, 10);	
-	lcd_puts(buffer);
-	itoa(second%10, buffer, 10);	 
-	lcd_puts(buffer);
+	lcd_update_second();
 }
 
 ISR(TIMER1_COMPA_vect)
