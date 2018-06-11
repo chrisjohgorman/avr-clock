@@ -12,15 +12,13 @@ Hardware: HD44780 compatible LCD text display
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
-#include <avr/sleep.h>
 #include "lcd.h"
 
 /*
 ** function prototypes
 */ 
 void wait_until_key_pressed(void);
-void lcd_update_clock(void);
-void lcd_update_date(void);
+void lcd_display_clock(void);
 void lcd_display_second(void);
 void lcd_display_minute(void);
 void lcd_display_hour(void);
@@ -28,6 +26,12 @@ void lcd_display_day(void);
 void lcd_display_weekday(void);
 void lcd_display_month(void);
 void lcd_display_year(void);
+void set_second(void);
+void set_minute(void);
+void set_hour(void);
+void set_day(void);
+void set_month(void);
+void set_year(void);
 char spring_savings(void);
 char fall_savings(void);
 char day_of_week(int, char, char);
@@ -92,11 +96,63 @@ int main(void)
     	lcd_init(LCD_DISP_ON);
         lcd_clrscr();
 	
-	//set_sleep_mode(SLEEP_MODE_IDLE);
     	for (;;) {  
-		//sleep_mode();
-       	 	/* put string to display (line 1) with linefeed */
+		// TODO set second, minute, hour, day, month, year
+		set_second();
+		wait_until_key_pressed();
+		set_minute();
+		wait_until_key_pressed();
+		set_hour();
+		wait_until_key_pressed();
+		set_day();
+		wait_until_key_pressed();
+		set_month();
+		wait_until_key_pressed();
+		set_year();
+		wait_until_key_pressed();
     }
+}
+
+void set_year()
+{
+	lcd_gotoxy(12,0);
+	lcd_puts("    ");
+	_delay_ms(5);
+}
+
+void set_month()
+{
+	lcd_gotoxy(4,0);
+	lcd_puts("   ");
+	_delay_ms(5);
+}
+
+void set_day()
+{
+	lcd_gotoxy(8,0);
+	lcd_puts("  ");
+	_delay_ms(5);
+}
+
+void set_hour()
+{
+	lcd_gotoxy(4,1);
+	lcd_puts("  ");
+	_delay_ms(5);
+}
+
+void set_minute()
+{
+	lcd_gotoxy(7,1);
+	lcd_puts("  ");
+	_delay_ms(5);
+}
+
+void set_second()
+{
+	lcd_gotoxy(10,1);
+	lcd_puts("  ");
+	_delay_ms(5);
 }
 
 void lcd_display_month() 
@@ -222,7 +278,7 @@ char leap_year(int year) {
  * https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week
  */
 
-void lcd_update_clock() 
+void lcd_display_clock() 
 {
 	lcd_display_weekday();
 	lcd_putc(' ');
@@ -286,6 +342,6 @@ ISR(TIMER1_COMPA_vect)
                         }
                 }
         }
-	lcd_update_clock();
+	lcd_display_clock();
 }
 
