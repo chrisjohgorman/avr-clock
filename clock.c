@@ -21,13 +21,13 @@ Hardware: HD44780 compatible LCD text display
 void wait_until_key_pressed(void);
 void lcd_update_clock(void);
 void lcd_update_date(void);
-void lcd_update_second(void);
-void lcd_update_minute(void);
-void lcd_update_hour(void);
-void lcd_update_day(void);
-void lcd_update_weekday(void);
-void lcd_update_month(void);
-void lcd_update_year(void);
+void lcd_display_second(void);
+void lcd_display_minute(void);
+void lcd_display_hour(void);
+void lcd_display_day(void);
+void lcd_display_weekday(void);
+void lcd_display_month(void);
+void lcd_display_year(void);
 char spring_savings(void);
 char fall_savings(void);
 char day_of_week(int, char, char);
@@ -99,26 +99,13 @@ int main(void)
     }
 }
 
-void lcd_update_date()
-{	
-	lcd_update_weekday();
-	lcd_putc(' ');
-	lcd_update_month();
-	lcd_putc(' ');
-	lcd_update_day();
-	lcd_putc(',');
-	lcd_putc(' ');
-	lcd_update_year();
-	lcd_putc('\n');
-}
-
-void lcd_update_month() 
+void lcd_display_month() 
 {
 	lcd_gotoxy(4,0);
 	lcd_puts(months[month -1]);
 }
 
-void lcd_update_day() 
+void lcd_display_day() 
 {
 	char buffer[7];
 	lcd_gotoxy(8,0);
@@ -126,7 +113,7 @@ void lcd_update_day()
 	lcd_puts(buffer);
 }
 
-void lcd_update_year() 
+void lcd_display_year() 
 {
 	char buffer[7];
 	lcd_gotoxy(12,0);
@@ -134,7 +121,7 @@ void lcd_update_year()
 	lcd_puts(buffer);
 }
 
-void lcd_update_weekday()
+void lcd_display_weekday()
 {
 	unsigned char weekday;
 	weekday = day_of_week(year, month, day);
@@ -142,7 +129,7 @@ void lcd_update_weekday()
 	lcd_puts(weekdays[weekday]);
 }
 
-void lcd_update_hour()
+void lcd_display_hour()
 {
 	char buffer[7];
 	lcd_gotoxy(4,1);
@@ -152,7 +139,7 @@ void lcd_update_hour()
         lcd_puts(buffer);
 }
 
-void lcd_update_minute()
+void lcd_display_minute()
 {
 	char buffer[7];
 	lcd_gotoxy(7,1);
@@ -162,7 +149,7 @@ void lcd_update_minute()
 	lcd_puts(buffer);
 }
 
-void lcd_update_second()
+void lcd_display_second()
 {
 	char buffer[7];
 	lcd_gotoxy(10,1);
@@ -237,11 +224,20 @@ char leap_year(int year) {
 
 void lcd_update_clock() 
 {
-	lcd_update_hour();
+	lcd_display_weekday();
+	lcd_putc(' ');
+	lcd_display_month();
+	lcd_putc(' ');
+	lcd_display_day();
+	lcd_putc(',');
+	lcd_putc(' ');
+	lcd_display_year();
+	lcd_putc('\n');
+	lcd_display_hour();
         lcd_putc(':');
-	lcd_update_minute();
+	lcd_display_minute();
 	lcd_putc(':');
-	lcd_update_second();
+	lcd_display_second();
 }
 
 ISR(TIMER1_COMPA_vect)
@@ -290,7 +286,6 @@ ISR(TIMER1_COMPA_vect)
                         }
                 }
         }
-	lcd_update_date();
 	lcd_update_clock();
 }
 
