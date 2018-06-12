@@ -17,7 +17,9 @@ Hardware: HD44780 compatible LCD text display
 /*
  ** function prototypes
  */
-void wait_until_key_pressed(void);
+void wait_until_up_pressed(void);
+void wait_until_down_pressed(void);
+void wait_until_set_pressed(void);
 void lcd_display_clock(void);
 void lcd_display_second(void);
 void lcd_display_minute(void);
@@ -52,10 +54,10 @@ volatile unsigned char daylight_time = 0;
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-		"Aug", "Sep", "Oct", "Nov", "Dec" };
+	"Aug", "Sep", "Oct", "Nov", "Dec" };
 const char daytab[2][12] = {
-		{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-		{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+	{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+	{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 };  
 
 /*
@@ -63,7 +65,35 @@ const char daytab[2][12] = {
  */
 ISR(TIMER1_COMPA_vect);
 
-void wait_until_key_pressed(void)
+void wait_until_up_pressed(void)
+{
+	unsigned char temp1, temp2;
+
+	do {
+		temp1 = PIND;                  // read input
+		_delay_ms(5);                  // delay for key debounce
+		temp2 = PIND;                  // read input
+		temp1 = (temp1 & temp2);       // debounce input
+	} while ( temp1 & _BV(PIND0) );
+
+	loop_until_bit_is_set(PIND,PIND0);     /* wait until key is released */
+}
+
+void wait_until_down_pressed(void)
+{
+	unsigned char temp1, temp2;
+
+	do {
+		temp1 = PIND;                  // read input
+		_delay_ms(5);                  // delay for key debounce
+		temp2 = PIND;                  // read input
+		temp1 = (temp1 & temp2);       // debounce input
+	} while ( temp1 & _BV(PIND1) );
+
+	loop_until_bit_is_set(PIND,PIND1);     /* wait until key is released */
+}
+
+void wait_until_set_pressed(void)
 {
 	unsigned char temp1, temp2;
 
@@ -80,8 +110,12 @@ void wait_until_key_pressed(void)
 
 int main(void)
 {
+	DDRD &=~ (1 << PD0);        /* Pin PD0 input              */
+	PORTD |= (1 << PD0);        /* Pin PD0 pull-up enabled    */
 	DDRD &=~ (1 << PD1);        /* Pin PD1 input              */
 	PORTD |= (1 << PD1);        /* Pin PD1 pull-up enabled    */
+	DDRD &=~ (1 << PD2);        /* Pin PD2 input              */
+	PORTD |= (1 << PD2);        /* Pin PD2 pull-up enabled    */
 
 	TCCR1B |= (1 << WGM12);
 	TIMSK |= (1 << OCIE1A);
@@ -103,20 +137,19 @@ int main(void)
 		// else run lcd_display_clock()
 		if(1)
 		{
+			wait_until_set_pressed();
 			set_second();
-			wait_until_key_pressed();
+			wait_until_set_pressed();
 			set_minute();
-			wait_until_key_pressed();
+			wait_until_set_pressed();
 			set_hour();
-			wait_until_key_pressed();
+			wait_until_set_pressed();
 			set_day();
-			wait_until_key_pressed();
+			wait_until_set_pressed();
 			set_month();
-			wait_until_key_pressed();
+			wait_until_set_pressed();
 			set_year();
-			wait_until_key_pressed();
-		} else
-			lcd_display_clock();
+		}
 	}
 }
 
@@ -124,42 +157,54 @@ void set_year()
 {
 	lcd_gotoxy(12,0);
 	lcd_puts("    ");
-	_delay_ms(5);
+	_delay_ms(50);
+	lcd_display_year();
+	_delay_ms(50);
 }
 
 void set_month()
 {
 	lcd_gotoxy(4,0);
 	lcd_puts("   ");
-	_delay_ms(5);
+	_delay_ms(50);
+	lcd_display_month();
+	_delay_ms(50);
 }
 
 void set_day()
 {
 	lcd_gotoxy(8,0);
 	lcd_puts("  ");
-	_delay_ms(5);
+	_delay_ms(50);
+	lcd_display_day();
+	_delay_ms(50);
 }
 
 void set_hour()
 {
 	lcd_gotoxy(4,1);
 	lcd_puts("  ");
-	_delay_ms(5);
+	_delay_ms(50);
+	lcd_display_hour();
+	_delay_ms(50);
 }
 
 void set_minute()
 {
 	lcd_gotoxy(7,1);
 	lcd_puts("  ");
-	_delay_ms(5);
+	_delay_ms(50);
+	lcd_display_minute();
+	_delay_ms(50);
 }
 
 void set_second()
 {
 	lcd_gotoxy(10,1);
 	lcd_puts("  ");
-	_delay_ms(5);
+	_delay_ms(50);
+	lcd_display_second();
+	_delay_ms(50);
 }
 
 void lcd_display_month() 
@@ -301,6 +346,7 @@ void lcd_display_clock()
 	lcd_display_minute();
 	lcd_putc(':');
 	lcd_display_second();
+	lcd_putc('\n');
 }
 
 ISR(TIMER1_COMPA_vect)
