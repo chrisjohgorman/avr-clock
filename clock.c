@@ -6,7 +6,7 @@ Software: AVR-GCC 4.x
 Hardware: HD44780 compatible LCD text display
           AVR with external SRAM interface if memory-mapped LCD interface is used
           any AVR with 7 free I/O pins if 4-bit IO port mode is used
-**************************************************************************/
+ **************************************************************************/
 #include <stdlib.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -15,8 +15,8 @@ Hardware: HD44780 compatible LCD text display
 #include "lcd.h"
 
 /*
-** function prototypes
-*/ 
+ ** function prototypes
+ */
 void wait_until_key_pressed(void);
 void lcd_display_clock(void);
 void lcd_display_second(void);
@@ -52,10 +52,10 @@ volatile unsigned char daylight_time = 0;
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-	"Aug", "Sep", "Oct", "Nov", "Dec" };
+		"Aug", "Sep", "Oct", "Nov", "Dec" };
 const char daytab[2][12] = {
-        {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-        {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+		{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+		{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
 };  
 
 /*
@@ -65,52 +65,59 @@ ISR(TIMER1_COMPA_vect);
 
 void wait_until_key_pressed(void)
 {
-    	unsigned char temp1, temp2;
-    
-    	do {
-        	temp1 = PIND;                  // read input
-        	_delay_ms(5);                  // delay for key debounce
-        	temp2 = PIND;                  // read input
-        	temp1 = (temp1 & temp2);       // debounce input
-    	} while ( temp1 & _BV(PIND2) );
-    
-    	loop_until_bit_is_set(PIND,PIND2);     /* wait until key is released */
+	unsigned char temp1, temp2;
+
+	do {
+		temp1 = PIND;                  // read input
+		_delay_ms(5);                  // delay for key debounce
+		temp2 = PIND;                  // read input
+		temp1 = (temp1 & temp2);       // debounce input
+	} while ( temp1 & _BV(PIND2) );
+
+	loop_until_bit_is_set(PIND,PIND2);     /* wait until key is released */
 }
 
 
 int main(void)
 {
-    	DDRD &=~ (1 << PD2);        /* Pin PD2 input              */
-    	PORTD |= (1 << PD2);        /* Pin PD2 pull-up enabled    */
+	DDRD &=~ (1 << PD1);        /* Pin PD1 input              */
+	PORTD |= (1 << PD1);        /* Pin PD1 pull-up enabled    */
 
-       	TCCR1B |= (1 << WGM12);
+	TCCR1B |= (1 << WGM12);
 	TIMSK |= (1 << OCIE1A);
 	sei();
 	//OCR1A = 32768 - 1; /* set CTC compare value to 1Hz at 32.768KHz 
 	//			with a prescaler of 1 (hex 0x7FFF) */
 	OCR1A = 16525-1;
 	//TCCR1B |= (1 << CS10) /* set to clk_io/1 (No prescaling) */
-       	TCCR1B |= ((1 << CS10) | (1 << CS11)); 
+	TCCR1B |= ((1 << CS10) | (1 << CS11));
 
-    	/* initialize display, cursor off */
-    	lcd_init(LCD_DISP_ON);
-        lcd_clrscr();
-	
-    	for (;;) {  
+	/* initialize display, cursor off */
+	lcd_init(LCD_DISP_ON);
+	lcd_clrscr();
+
+	for (;;) {
 		// TODO set second, minute, hour, day, month, year
-		set_second();
-		wait_until_key_pressed();
-		set_minute();
-		wait_until_key_pressed();
-		set_hour();
-		wait_until_key_pressed();
-		set_day();
-		wait_until_key_pressed();
-		set_month();
-		wait_until_key_pressed();
-		set_year();
-		wait_until_key_pressed();
-    }
+		// if set button pressed
+		// run set_second, etc.
+		// else run lcd_display_clock()
+		if(1)
+		{
+			set_second();
+			wait_until_key_pressed();
+			set_minute();
+			wait_until_key_pressed();
+			set_hour();
+			wait_until_key_pressed();
+			set_day();
+			wait_until_key_pressed();
+			set_month();
+			wait_until_key_pressed();
+			set_year();
+			wait_until_key_pressed();
+		} else
+			lcd_display_clock();
+	}
 }
 
 void set_year()
@@ -189,10 +196,10 @@ void lcd_display_hour()
 {
 	char buffer[7];
 	lcd_gotoxy(4,1);
-        itoa(hour/10, buffer, 10);
-        lcd_puts(buffer);
-        itoa(hour%10 , buffer, 10);
-        lcd_puts(buffer);
+	itoa(hour/10, buffer, 10);
+	lcd_puts(buffer);
+	itoa(hour%10 , buffer, 10);
+	lcd_puts(buffer);
 }
 
 void lcd_display_minute()
@@ -217,9 +224,9 @@ void lcd_display_second()
 
 char day_of_week(int year, char month, char day)
 {
-       static char table[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-       year -= month < 3;
-       return (year + year/4 - year/100 + year/400 + table[month-1] + day) % 7;
+	static char table[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
+	year -= month < 3;
+	return (year + year/4 - year/100 + year/400 + table[month-1] + day) % 7;
 }
 
 /* The following function used to be called NthDate and was authored by
@@ -250,15 +257,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    For more information, please refer to https://unlicense.org  */
 
 char day_of_month(int year, char month, char dow, char week){
-  	char target_date = 1;
-  	char first_dow = day_of_week(year, month, target_date);
-  	while (first_dow != dow){
-    		first_dow = (first_dow+1)%7;
-    		target_date++;
-  	}
+	char target_date = 1;
+	char first_dow = day_of_week(year, month, target_date);
+	while (first_dow != dow){
+		first_dow = (first_dow+1)%7;
+		target_date++;
+	}
 
-  	target_date += (week-1)*7;
-  	return target_date;
+	target_date += (week-1)*7;
+	return target_date;
 }
 
 char fall_savings(void) {
@@ -290,7 +297,7 @@ void lcd_display_clock()
 	lcd_display_year();
 	lcd_putc('\n');
 	lcd_display_hour();
-        lcd_putc(':');
+	lcd_putc(':');
 	lcd_display_minute();
 	lcd_putc(':');
 	lcd_display_second();
@@ -298,15 +305,15 @@ void lcd_display_clock()
 
 ISR(TIMER1_COMPA_vect)
 {
-        second++;
+	second++;
 
-        if(second > 59)
-        {
-                second = 0;
-                minute++;
-                if(minute > 59)
-                {
-                        minute = 0;
+	if(second > 59)
+	{
+		second = 0;
+		minute++;
+		if(minute > 59)
+		{
+			minute = 0;
 			/*
 			 * first sunday in november decrement hour at 2 am
 			 * second sunday in march increment hour at 2 am
@@ -323,25 +330,25 @@ ISR(TIMER1_COMPA_vect)
 				hour--;
 				daylight_time = 1;
 			}
-                        hour++;
-                        if(hour > 23) {
-                                hour = 0;
-                                day++;
-                                if(!leap_year(year))
-                                        lastdom = daytab[0][month -1];
-                                else
-                                        lastdom = daytab[1][month -1];
-                                if(day > lastdom) {
-                                        day = 1;
-                                        month++;
-                                        if (month > 12) {
-                                                month = 1;
-                                                year++;
-                                        }
-                                }
-                        }
-                }
-        }
+			hour++;
+			if(hour > 23) {
+				hour = 0;
+				day++;
+				if(!leap_year(year))
+					lastdom = daytab[0][month -1];
+				else
+					lastdom = daytab[1][month -1];
+				if(day > lastdom) {
+					day = 1;
+					month++;
+					if (month > 12) {
+						month = 1;
+						year++;
+					}
+				}
+			}
+		}
+	}
 	lcd_display_clock();
 }
 
