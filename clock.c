@@ -78,10 +78,10 @@ int main(void)
 	TCCR1B |= (1 << WGM12);
 	TIMSK |= (1 << OCIE1A);
 	sei();
-	//OCR1A = 32768 - 1; /* set CTC compare value to 1Hz at 32.768KHz 
-	//			with a prescaler of 1 (hex 0x7FFF) */
+	//OCR1A = 32768 - 1; // set CTC compare value to 1Hz at 32.768KHz 
+        		     //	with a prescaler of 1 (hex 0x7FFF) 
 	OCR1A = 16525-1;
-	//TCCR1B |= (1 << CS10) /* set to clk_io/1 (No prescaling) */
+	//TCCR1B |= (1 << CS10); /* set to clk_io/1 (No prescaling) */
 	TCCR1B |= ((1 << CS10) | (1 << CS11));
 
 	/* initialize display, cursor off */
@@ -473,15 +473,5 @@ ISR(TIMER1_COMPA_vect)
 
 ISR(INT0_vect)
 {
-	unsigned char temp1, temp2;
-
-	do {
-		temp1 = PIND;                  // read input
-		_delay_ms(5);                  // delay for key debounce
-		temp2 = PIND;                  // read input
-		temp1 = (temp1 & temp2);       // debounce input
-	} while ( temp1 & _BV(PIND2) );
-
-	loop_until_bit_is_set(PIND, PD2);
 	set_time++;
 }
