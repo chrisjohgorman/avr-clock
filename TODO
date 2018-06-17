@@ -1,5 +1,3 @@
-- incorporate interrupt to set day month and year automatically
-- calculate weekdays to make the 
-	second sunday in march 2am becomes 3am for daylight saving
-	first sunday in november 2am becomes 1am for daylight savings
-
+Cleanup code comments
+Set fuses and timer to use 32768Hz crystal
+Post message to AVR Freaks asking to criticize code
