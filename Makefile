@@ -1,334 +1,101 @@
-# ----------------------------------------------------------------------------
-# Makefile for lcd library
-# Author: Peter Fleury
-# File:   $Id: Makefile.lcd,v 1.5 2015/01/31 19:59:32 peter Exp $
+# Name: Makefile
+# Author: Chris Gorman <chrisjohgorman@gmail.com>
+# License: GNU Public License v3.0
+
+# This is a prototype Makefile. Modify it according to your needs.
+# You should at least check the settings for
+# DEVICE ....... The AVR device you compile for
+# CLOCK ........ Target AVR clock rate in Hertz
+# OBJECTS ...... The object files created from your source files. This list is
+#                usually the same as the list of source files with suffix ".o".
+# PROGRAMMER ... Options to avrdude which define the hardware you use for
+#                uploading to the AVR and the interface where this hardware
+#                is connected. We recommend that you leave it undefined and
+#                add settings like this to your ~/.avrduderc file:
+#                   default_programmer = "stk500v2"
+#                   default_serial = "avrdoper"
+# FUSES ........ Parameters for avrdude to flash the fuses appropriately.
+
+DEVICE     = atmega162
+CLOCK      = 1000000
+PROGRAMMER = -c usbtiny -P usb
+OBJECTS    = clock.o lcd.o
+FUSES      = -U hfuse:w:0x99:m -U lfuse:w:0xe5:m -U efuse:w:0xff:m
+
+# ATMega8 fuse bits used above (fuse bits for other devices are different!):
+# Example for 8 MHz internal oscillator
+# Fuse high byte:
+# 0xd9 = 1 1 0 1   1 0 0 1 <-- BOOTRST (boot reset vector at 0x0000)
+#        ^ ^ ^ ^   ^ ^ ^------ BOOTSZ0
+#        | | | |   | +-------- BOOTSZ1
+#        | | | |   +---------- EESAVE (set to 0 to preserve EEPROM over chip erase)
+#        | | | +-------------- CKOPT (clock option, depends on oscillator type)
+#        | | +---------------- SPIEN (if set to 1, serial programming is disabled)
+#        | +------------------ WDTON (if set to 0, watchdog is always on)
+#        +-------------------- RSTDISBL (if set to 0, RESET pin is disabled)
+# Fuse low byte:
+# 0x24 = 0 0 1 0   0 1 0 0
+#        ^ ^ \ /   \--+--/
+#        | |  |       +------- CKSEL 3..0 (8M internal RC)
+#        | |  +--------------- SUT 1..0 (slowly rising power)
+#        | +------------------ BODEN (if 0, brown-out detector is enabled)
+#        +-------------------- BODLEVEL (if 0: 4V, if 1: 2.7V)
 #
-# Adjust MCU and F_CPU below to your AVR target 
-# Optionally define -D_LCD_DEFINITIONS_FILE in the CDEFS section below 
-# if you want to use a separate file for display and target specific defines
-#----------------------------------------------------------------------------
-# usage:
-#
-# make          = build software
-# make clean    = Clean out built project files
-# make program  = Download the hex file to the device, using avrdude.
-#                 Please customize the avrdude settings below first!
-#
-# make filename.s = Just compile filename.c into the assembler code only.
-# make filename.i = Create a preprocessed source file 
-#
-# To rebuild project do "make clean" then "make"
-#----------------------------------------------------------------------------
+# For computing fuse byte values for other devices and options see
+# the fuse bit calculator at http://www.engbedded.com/fusecalc/
 
 
-# MCU name
-MCU = atmega162
+# Tune the lines below only if you know what you are doing:
 
+AVRDUDE = avrdude $(PROGRAMMER) -p $(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DF_CPU=$(CLOCK) -mmcu=$(DEVICE)
 
-# Processor frequency.
-#     This will define a symbol, F_CPU, in all source code files equal to the 
-#     processor frequency. You can then use this symbol in your source code to 
-#     calculate timings. Do NOT tack on a 'UL' at the end, this will be done
-#     automatically to create a 32-bit value in your source code.
-F_CPU = 1000000
+# symbolic targets:
+all:	clock.hex
 
+.c.o:
+	$(COMPILE) -c $< -o $@
 
-# Target file name (without extension).
-TARGET =  clock
+.S.o:
+	$(COMPILE) -x assembler-with-cpp -c $< -o $@
+# "-x assembler-with-cpp" should not be necessary since this is the default
+# file type for the .S (with capital S) extension. However, upper case
+# characters are not always preserved on Windows. To ensure WinAVR
+# compatibility define the file type manually.
 
+.c.s:
+	$(COMPILE) -S $< -o $@
 
-# List C source files here. (C dependencies are automatically generated.)
-SRC = $(TARGET).c  lcd.c 
+flash:	all
+	$(AVRDUDE) -U flash:w:clock.hex:i
 
+fuse:
+	$(AVRDUDE) $(FUSES)
 
-# List Assembler source files here.
-#     Make them always end in a capital .S.  Files ending in a lowercase .s
-#     will not be considered source files but generated files (assembler
-#     output from the compiler), and will be deleted upon "make clean"!
-#     Even though the DOS/Win* filesystem matches both .s and .S the same,
-#     it will preserve the spelling of the filenames, and gcc itself does
-#     care about how the name is spelled on its command-line.
-#ASRC = 
+# Xcode uses the Makefile targets "", "clean" and "install"
+install: flash fuse
 
+# if you use a bootloader, change the command below appropriately:
+load: all
+	bootloadHID clock.hex
 
-# List any extra directories to look for include files here.
-#     Each directory must be seperated by a space.
-#     Use forward slashes for directory separators.
-#     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = 
-
-
-#specify alternate location of sources files
-#     (unlike VPATH= which is a search path for all prerequisites, not just source files)
-#vpath %.c <directory>
-#vpath %.S <directory>
-
-
-# Optimization level, can be [0, 1, 2, 3, s]. 
-#     0 = turn off optimization. s = optimize for size.
-#     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = s
-
-
-# Place -D or -U options here
-# Uncomment below line if you want to use a separate file lcd_definitions.h
-# for display and target specific definitions
-#CDEFS = -D_LCD_DEFINITIONS_FILE
-
-
-# Place -I options here
-CINCS =
-
-
-#---------------- Compiler Options ----------------
-#  -gdwarf-2:    generate debugging information
-#  -O*:          optimization level
-#  -f...:        tuning, see GCC manual and avr-libc documentation
-#  -Wall...:     warning level
-#  -Wa,...:      tell GCC to pass this to the assembler.
-#    -adhlns...: create assembler listing
-CFLAGS  = -DF_CPU=$(F_CPU)UL
-CFLAGS += $(CDEFS) $(CINCS)
-CFLAGS += -I. $(patsubst %,-I%,$(EXTRAINCDIRS))
-CFLAGS += -std=gnu99
-CFLAGS += -gdwarf-2
-CFLAGS += -O$(OPT)
-CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
-CFLAGS += -Wall -Wstrict-prototypes
-CFLAGS += -Wa,-adhlns=$(<:.c=.lst)
-CFLAGS += -save-temps
-
-
-#---------------- Assembler Options ----------------
-#  -Wa,...:   tell GCC to pass this to the assembler.
-#   -adhlns=$(<:.S=.lst)  create listing
-#   -gdwarf-2:            generate debugging information
-ASFLAGS = -DF_CPU=$(F_CPU)UL -x assembler-with-cpp -Wa,-gdwarf2
-
-#---------------- Library Options ----------------
-# Minimalistic printf version
-PRINTF_LIB_MIN = -Wl,-u,vfprintf -lprintf_min
-
-# Floating point printf version (requires MATH_LIB = -lm below)
-PRINTF_LIB_FLOAT = -Wl,-u,vfprintf -lprintf_flt
-
-# If this is left blank, then it will use the Standard printf version.
-PRINTF_LIB = 
-#PRINTF_LIB = $(PRINTF_LIB_MIN)
-#PRINTF_LIB = $(PRINTF_LIB_FLOAT)
-
-
-# Minimalistic scanf version
-SCANF_LIB_MIN = -Wl,-u,vfscanf -lscanf_min
-
-# Floating point + %[ scanf version (requires MATH_LIB = -lm below)
-SCANF_LIB_FLOAT = -Wl,-u,vfscanf -lscanf_flt
-
-# If this is left blank, then it will use the Standard scanf version.
-SCANF_LIB = 
-#SCANF_LIB = $(SCANF_LIB_MIN)
-#SCANF_LIB = $(SCANF_LIB_FLOAT)
-
-
-MATH_LIB = -lm
-
-
-
-#---------------- External Memory Options ----------------
-
-# 64 KB of external RAM, starting after internal RAM (ATmega128!),
-# used for variables (.data/.bss) and heap (malloc()).
-#EXTMEMOPTS = -Wl,-Tdata=0x801100,--defsym=__heap_end=0x80ffff
-
-# 64 KB of external RAM, starting after internal RAM (ATmega128!),
-# only used for heap (malloc()).
-#EXTMEMOPTS = -Wl,--defsym=__heap_start=0x801100,--defsym=__heap_end=0x80ffff
-
-EXTMEMOPTS =
-
-
-
-#---------------- Linker Options ----------------
-#  -Wl,...:     tell GCC to pass this to linker.
-#    -Map:      create map file
-#    --cref:    add cross reference to  map file
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
-LDFLAGS += $(EXTMEMOPTS)
-LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
-
-
-
-#---------------- Programming Options (avrdude) ----------------
-
-# Programming hardware:   Type: avrdude -c ? to get a full listing.
-AVRDUDE_PROGRAMMER = usbtiny
-
-# usb, com1 = serial port, lpt1 = parallel port 
-AVRDUDE_PORT = usb
-
-AVRDUDE_WRITE_FLASH = -U flash:w:$(TARGET).hex
-#AVRDUDE_WRITE_EEPROM = -U eeprom:w:$(TARGET).eep
-
-# Uncomment the following if you do /not/ wish a verification to be performed after programming the device.
-#AVRDUDE_NO_VERIFY = -V
-
-# Disable save mode for fuses
-AVRDUDE_NO_SAFEMODE = -u
-
-# Uncomment the following if you want avrdude's erase cycle counter.
-# Note that this counter needs to be initialized first using -Yn,
-#AVRDUDE_ERASE_COUNTER = -y
-
-# Increase verbosity level.  
-#AVRDUDE_VERBOSE = -v -v
-
-# Adjust programming speed of USBasp
-#  no -B switch 375khz (default)
-#  -B 2000    	500 hz
-#  -B 1000 			1khz
-#  -B 500 			2khz
-#  -B 250 			4khz
-#  -B 125 			8 khz
-#  -B 62 			  16khz
-#  -B 31 				32khz * the cutoff for bit banged isp
-#  -B 10 				93.75 khz 
-#  -B 5 			  187.5 khz
-#  -B 2 				375 khz
-#  -B 1 				750 khz
-#  -B .5 			  1.5mhz 
-AVRDUDE_SPEED = 
-
-AVRDUDE_FLAGS = -p $(MCU) -P $(AVRDUDE_PORT) -c $(AVRDUDE_PROGRAMMER)
-AVRDUDE_FLAGS += $(AVRDUDE_NO_VERIFY)
-AVRDUDE_FLAGS += $(AVRDUDE_NO_SAFEMODE)
-AVRDUDE_FLAGS += $(AVRDUDE_ERASE_COUNTER)
-AVRDUDE_FLAGS += $(AVRDUDE_SPEED)
-AVRDUDE_FLAGS += $(AVRDUDE_VERBOSE)
-
-
-
-#============================================================================
-# Output format. (can be srec, ihex, binary)
-FORMAT = ihex
-
-# Define programs and commands.
-#SHELL = win-bash
-CC = avr-gcc
-OBJCOPY = avr-objcopy
-OBJDUMP = avr-objdump
-SIZE = avr-size
-NM = avr-nm
-AVRDUDE = avrdude
-REMOVE = rm -rf
-COPY = cp
-WINSHELL = cmd
-
-
-# Define Messages
-MSG_FLASH = Creating load file for Flash:
-MSG_EEPROM = Creating load file for EEPROM:
-MSG_EXTENDED_LISTING = Creating Extended Listing:
-MSG_SYMBOL_TABLE = Creating Symbol Table:
-MSG_LINKING = Linking:
-MSG_COMPILING = Compiling:
-MSG_ASSEMBLING = Assembling:
-MSG_CLEANING = Cleaning project:
-
-
-
-# Define all object files.
-OBJ = $(SRC:.c=.o) $(ASRC:.S=.o)
-
-# Define all listing files.
-LST = $(SRC:.c=.lst) $(ASRC:.S=.lst) 
-
-
-# Compiler flags to generate dependency files.
-GENDEPFLAGS = -MD -MP -MF .dep/$(@F).d
-
-
-# Combine all necessary flags and optional flags.
-# Add target processor to flags.
-ALL_CFLAGS = -mmcu=$(MCU) $(CFLAGS) $(GENDEPFLAGS)
-ALL_ASFLAGS = -mmcu=$(MCU) -I. $(ASFLAGS)
-
-
-# Default target.
-all: gccversion $(TARGET).elf $(TARGET).hex $(TARGET).eep $(TARGET).lss $(TARGET).sym size
-
-
-# Display compiler version information.
-gccversion : 
-	@echo $(OBJ1)
-	@$(CC) --version
-
-
-# Create final output files (.hex, .eep) from ELF output file.
-%.hex: %.elf
-	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O $(FORMAT) -R .eeprom $< $@
-
-%.eep: %.elf
-	@echo $(MSG_EEPROM) $@
-	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" --change-section-lma .eeprom=0 -O $(FORMAT) $< $@ 
-
-# Create extended listing file from ELF output file.
-%.lss: %.elf
-	@echo $(MSG_EXTENDED_LISTING) $@
-	$(OBJDUMP) -h -S $< > $@
-
-# Create a symbol table from ELF output file.
-%.sym: %.elf
-	@echo $(MSG_SYMBOL_TABLE) $@
-	$(NM) -n $< > $@
-
-# Link: create ELF output file from object files.
-.SECONDARY : $(TARGET).elf
-.PRECIOUS : $(OBJ)
-%.elf: $(OBJ)
-	@echo $(MSG_LINKING) $@
-	$(CC) -mmcu=$(MCU) $(LDFLAGS) $^ --output $(@F) 
-
-# Compile: create object files from C source files.
-%.o : %.c
-	@echo $(MSG_COMPILING) $<
-	$(CC) -c $(ALL_CFLAGS) $< -o $(@F)
-
-# Compile: create assembler files from C source files.
-%.s : %.c
-	$(CC) -S $(ALL_CFLAGS) $< -o $(@F)
-
-# Assemble: create object files from assembler source files.
-%.o : %.S
-	@echo $(MSG_ASSEMBLING) $<
-	$(CC) -c $(ALL_ASFLAGS) $< -o $(@F)
-
-# Create preprocessed source for use in sending a bug report.
-%.i : %.c
-	$(CC) -E -mmcu=$(MCU) -I. $(CFLAGS) $< -o $(@F) 
-
-
-# Display size of file.
-size: ${TARGET}.elf
-	@avr-size ${TARGET}.elf
-
-
-# Program the device.  
-program: $(TARGET).hex $(TARGET).eep
-	$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_WRITE_EEPROM)
-
-
-# Delete all generated files.
 clean:
-	@echo $(MSG_CLEANING)
-	$(REMOVE) $(TARGET).hex $(TARGET).eep $(TARGET).cof $(TARGET).elf $(TARGET).map $(TARGET).sym $(TARGET).lss $(OBJ) $(LST) $(SRC:.c=.s) $(SRC:.c=.d) $(SRC:.c=.i) .dep/
+	rm -f clock.hex clock.elf $(OBJECTS)
 
+# file targets:
+clock.elf: $(OBJECTS)
+	$(COMPILE) -o clock.elf $(OBJECTS)
 
-# Include the dependency files.
-#-include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*) 
--include $(shell mkdir .dep 2>NUL) $(wildcard .dep/*)
+clock.hex: clock.elf
+	rm -f clock.hex
+	avr-objcopy -j .text -j .data -O ihex clock.elf clock.hex
+	avr-size clock.elf
+# If you have an EEPROM section, you must also create a hex file for the
+# EEPROM and add it to the "flash" target.
 
+# Targets for code debugging and analysis:
+disasm:	clock.elf
+	avr-objdump -d clock.elf
 
-# Listing of phony targets.
-.PHONY : all size gccversion clean program
-
+cpp:
+	$(COMPILE) -E clock.c
