@@ -17,9 +17,6 @@ Hardware: HD44780 compatible LCD text display
 /*
  ** function prototypes
  */
-void wait_until_up_pressed(void);
-void wait_until_down_pressed(void);
-void wait_until_set_pressed(void);
 void lcd_display_clock(void);
 void lcd_display_second(void);
 void lcd_display_minute(void);
@@ -93,7 +90,7 @@ int main(void)
 
 	for (;;)
 	{
-		switch (set_time % 6)
+		switch (set_time % 7)
 		{
 		case 0:
 			// if button press up, year++
@@ -142,6 +139,12 @@ int main(void)
 				// if day < 1
 				// day = 1;
 			set_day();
+
+			if(!leap_year(year))
+				lastdom = daytab[0][month -1];
+			else
+				lastdom = daytab[1][month -1];
+
 			if(bit_is_clear(PIND, PD3))
 			{
 				day++;
@@ -217,8 +220,8 @@ int main(void)
 			// if button press up second = 0;
 			// if button press down second = 0;
 			break;
-		default:
-			lcd_display_clock();
+		case 6:
+			break;
 		}
 	}
 }
@@ -470,5 +473,15 @@ ISR(TIMER1_COMPA_vect)
 
 ISR(INT0_vect)
 {
+	unsigned char temp1, temp2;
+
+	do {
+		temp1 = PIND;                  // read input
+		_delay_ms(5);                  // delay for key debounce
+		temp2 = PIND;                  // read input
+		temp1 = (temp1 & temp2);       // debounce input
+	} while ( temp1 & _BV(PIND2) );
+
+	loop_until_bit_is_set(PIND, PD2);
 	set_time++;
 }
