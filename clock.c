@@ -1,11 +1,7 @@
 /*************************************************************************
-Title:    Clock routine
+Title:    Clock 
 Author:   Chris Gorman <chrisjohgorman@gmail.com>
 File:     clock.c
-Software: AVR-GCC 4.x
-Hardware: HD44780 compatible LCD text display
-          AVR with external SRAM interface if memory-mapped LCD interface is used
-          any AVR with 7 free I/O pins if 4-bit IO port mode is used
  **************************************************************************/
 #include <stdlib.h>
 #include <avr/io.h>
