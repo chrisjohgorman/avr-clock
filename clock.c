@@ -51,6 +51,7 @@ volatile unsigned char minute = 13;
 volatile unsigned char second = 00;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
+volatile unsigned char set_time = 0;
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
@@ -63,59 +64,19 @@ const char daytab[2][12] = {
 /*
  * Interrupt service routine
  */
+ISR(INT0_vect);
+
 ISR(TIMER1_COMPA_vect);
-
-void wait_until_up_pressed(void)
-{
-	unsigned char temp1, temp2;
-
-	do {
-		temp1 = PIND;                  // read input
-		_delay_ms(5);                  // delay for key debounce
-		temp2 = PIND;                  // read input
-		temp1 = (temp1 & temp2);       // debounce input
-	} while ( temp1 & _BV(PIND0) );
-
-	loop_until_bit_is_set(PIND,PIND0);     /* wait until key is released */
-}
-
-void wait_until_down_pressed(void)
-{
-	unsigned char temp1, temp2;
-
-	do {
-		temp1 = PIND;                  // read input
-		_delay_ms(5);                  // delay for key debounce
-		temp2 = PIND;                  // read input
-		temp1 = (temp1 & temp2);       // debounce input
-	} while ( temp1 & _BV(PIND1) );
-
-	loop_until_bit_is_set(PIND,PIND1);     /* wait until key is released */
-}
-
-void wait_until_set_pressed(void)
-{
-	unsigned char temp1, temp2;
-
-	do {
-		temp1 = PIND;                  // read input
-		_delay_ms(5);                  // delay for key debounce
-		temp2 = PIND;                  // read input
-		temp1 = (temp1 & temp2);       // debounce input
-	} while ( temp1 & _BV(PIND2) );
-
-	loop_until_bit_is_set(PIND,PIND2);     /* wait until key is released */
-}
-
 
 int main(void)
 {
-	DDRD &=~ (1 << PD0);        /* Pin PD0 input              */
-	PORTD |= (1 << PD0);        /* Pin PD0 pull-up enabled    */
-	DDRD &=~ (1 << PD1);        /* Pin PD1 input              */
-	PORTD |= (1 << PD1);        /* Pin PD1 pull-up enabled    */
-	DDRD &=~ (1 << PD2);        /* Pin PD2 input              */
+	DDRD &=~ (1 << PD2) | (1 << PD3) | (1 << PD4);  /* Pin PD2, PD3, PD4 input */
 	PORTD |= (1 << PD2);        /* Pin PD2 pull-up enabled    */
+	PORTD |= (1 << PD3);        /* Pin PD3 pull-up enabled    */
+	PORTD |= (1 << PD4);        /* Pin PD4 pull-up enabled    */
+
+	GIFR = (1 << INTF0);
+	GICR = (1 << INT0);
 
 	TCCR1B |= (1 << WGM12);
 	TIMSK |= (1 << OCIE1A);
@@ -130,25 +91,134 @@ int main(void)
 	lcd_init(LCD_DISP_ON);
 	lcd_clrscr();
 
-	for (;;) {
-		// TODO set second, minute, hour, day, month, year
-		// if set button pressed
-		// run set_second, etc.
-		// else run lcd_display_clock()
-		if(1)
+	for (;;)
+	{
+		switch (set_time % 6)
 		{
-			wait_until_set_pressed();
-			set_second();
-			wait_until_set_pressed();
-			set_minute();
-			wait_until_set_pressed();
-			set_hour();
-			wait_until_set_pressed();
-			set_day();
-			wait_until_set_pressed();
-			set_month();
-			wait_until_set_pressed();
+		case 0:
+			// if button press up, year++
+				//if year == 10000,
+				// year = 0;
 			set_year();
+			if(bit_is_clear(PIND, PD3))
+			{
+				year++;
+				if (year == 10000)
+					year = 0;
+			}
+			// if button press down, year--;
+				//if year == -1,
+				// year == 9999;
+			if(bit_is_clear(PIND, PD4))
+			{
+				year--;
+				if (year == -1)
+					year = 9999;
+			}
+			break;
+		case 1:
+
+			set_month();
+			if(bit_is_clear(PIND, PD3))
+			{
+				month++;
+				if (month == 13)
+					month = 1;
+			}
+
+			if(bit_is_clear(PIND, PD4))
+			{
+				month--;
+				if (month == 0)
+					month = 12;
+			}
+
+			break;
+		case 2:
+			// if button press up day++;
+				// if day > lastdom
+				// day = 1;
+			// if button press down day--;
+				// if day < 1
+				// day = 1;
+			set_day();
+			if(bit_is_clear(PIND, PD3))
+			{
+				day++;
+				if (day > lastdom)
+					day = 1;
+			}
+
+			if(bit_is_clear(PIND, PD4))
+			{
+				day--;
+				if (day < 1)
+					day = lastdom;
+			}
+
+			break;
+		case 3:
+			// if button press up hour++;
+				// if hour == 24
+				// hour = 0;
+			// if button press down hour--;
+				// if hour == -1
+				// hour = 23;
+			set_hour();
+			if(bit_is_clear(PIND, PD3))
+			{
+				hour++;
+				if (hour > 23)
+					hour = 0;
+			}
+
+			if(bit_is_clear(PIND, PD4))
+			{
+				hour--;
+				if (hour < 0)
+					hour = 23;
+			}
+
+			break;
+		case 4:
+			// if button press up minute++;
+				// if minute == 60
+				// minute = 1;
+			// if button press down minute--;
+				// if minute == -1
+				// minute = 59
+			set_minute();
+			if(bit_is_clear(PIND, PD3))
+			{
+				minute++;
+				if (minute == 60)
+					minute = 1;
+			}
+
+			if(bit_is_clear(PIND, PD4))
+			{
+				minute--;
+				if (minute < 0)
+					minute = 59;
+			}
+
+			break;
+		case 5:
+			set_second();
+			if(bit_is_clear(PIND, PD3))
+			{
+				second = 0;
+			}
+
+			if(bit_is_clear(PIND, PD4))
+			{
+				second = 0;
+			}
+			// if button press up second = 0;
+			// if button press down second = 0;
+			break;
+		default:
+			lcd_display_clock();
 		}
 	}
 }
@@ -157,54 +227,54 @@ void set_year()
 {
 	lcd_gotoxy(12,0);
 	lcd_puts("    ");
-	_delay_ms(50);
+	_delay_ms(500);
 	lcd_display_year();
-	_delay_ms(50);
+	_delay_ms(500);
 }
 
 void set_month()
 {
 	lcd_gotoxy(4,0);
 	lcd_puts("   ");
-	_delay_ms(50);
+	_delay_ms(500);
 	lcd_display_month();
-	_delay_ms(50);
+	_delay_ms(500);
 }
 
 void set_day()
 {
 	lcd_gotoxy(8,0);
 	lcd_puts("  ");
-	_delay_ms(50);
+	_delay_ms(500);
 	lcd_display_day();
-	_delay_ms(50);
+	_delay_ms(500);
 }
 
 void set_hour()
 {
 	lcd_gotoxy(4,1);
 	lcd_puts("  ");
-	_delay_ms(50);
+	_delay_ms(500);
 	lcd_display_hour();
-	_delay_ms(50);
+	_delay_ms(500);
 }
 
 void set_minute()
 {
 	lcd_gotoxy(7,1);
 	lcd_puts("  ");
-	_delay_ms(50);
+	_delay_ms(500);
 	lcd_display_minute();
-	_delay_ms(50);
+	_delay_ms(500);
 }
 
 void set_second()
 {
 	lcd_gotoxy(10,1);
 	lcd_puts("  ");
-	_delay_ms(50);
+	_delay_ms(500);
 	lcd_display_second();
-	_delay_ms(50);
+	_delay_ms(500);
 }
 
 void lcd_display_month() 
@@ -398,3 +468,7 @@ ISR(TIMER1_COMPA_vect)
 	lcd_display_clock();
 }
 
+ISR(INT0_vect)
+{
+	set_time++;
+}
