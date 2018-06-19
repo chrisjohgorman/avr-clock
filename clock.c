@@ -8,30 +8,10 @@
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include "lcd.h"
+#include "clock.h"
 
-//
-// function prototypes
-// 
-void lcd_display_clock(void);
-void lcd_display_second(void);
-void lcd_display_minute(void);
-void lcd_display_hour(void);
-void lcd_display_day(void);
-void lcd_display_weekday(void);
-void lcd_display_month(void);
-void lcd_display_year(void);
-void set_second(void);
-void set_minute(void);
-void set_hour(void);
-void set_day(void);
-void set_month(void);
-void set_year(void);
-char spring_savings(void);
-char fall_savings(void);
-char day_of_week(int, char, char);
-char day_of_month(int, char, char, char);
-char leap_year(int);
 
 //
 // Add hour minute second
@@ -65,14 +45,15 @@ int main(void)
 	DDRD &=~ (1 << PD0) | (1 << PD1) | (1 << PD2); // PD0, PD1, PD2 input
 	PORTD = (1 << PD0) | (1 << PD1) | (1 << PD2); // pullup resistors 
 
-	TCCR1B |= (1 << WGM12);
-	TIMSK |= (1 << OCIE1A);
+	TCCR1B = (1 << CS12) | (1 << WGM12);
+	TIMSK = (1 << OCIE1A);
+	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	sei();
 	//OCR1A = 32768 - 1; // set CTC compare value to 1Hz at 32.768KHz 
         		     //	with a prescaler of 1 (hex 0x7FFF) 
 	OCR1A = 16525-1;
 	//TCCR1B |= (1 << CS10); // set to clk_io/1 (No prescaling) 
-	TCCR1B |= ((1 << CS10) | (1 << CS11));
+	//TCCR1B |= ((1 << CS10) | (1 << CS11));
 
 	// initialize display, cursor off
 	lcd_init(LCD_DISP_ON);
@@ -220,6 +201,7 @@ int main(void)
 			}
 			break;
 		case 6:
+			//sleep_mode();
 			break;
 		}
 	}
