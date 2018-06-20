@@ -47,18 +47,14 @@ int main(void)
 
 	TCCR1B = (1 << CS12) | (1 << WGM12);
 	TIMSK = (1 << OCIE1A);
-	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+	OCR1A = 16525 - 1;
+	
 	sei();
-	//OCR1A = 32768 - 1; // set CTC compare value to 1Hz at 32.768KHz 
-        		     //	with a prescaler of 1 (hex 0x7FFF) 
-	OCR1A = 16525-1;
-	//TCCR1B |= (1 << CS10); // set to clk_io/1 (No prescaling) 
-	//TCCR1B |= ((1 << CS10) | (1 << CS11));
-
 	// initialize display, cursor off
 	lcd_init(LCD_DISP_ON);
 	lcd_clrscr();
 
+	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	for (;;)
 	{
 		switch (set_time % 7)
