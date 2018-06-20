@@ -21,7 +21,7 @@ volatile unsigned char month = 6;
 volatile unsigned char day = 11;
 volatile unsigned char hour = 15;
 volatile unsigned char minute = 13;
-volatile unsigned char second = 00;
+volatile unsigned char second = 0;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
 volatile unsigned char set_time = 0;
@@ -207,12 +207,35 @@ int main(void)
 	}
 }
 
+static void inline lcd_display_date_attribute(uint8_t attribute, 
+		uint8_t position, uint8_t line)
+{
+	char buffer[5];
+	lcd_gotoxy(position, line);
+	itoa(attribute, buffer, 10);
+	lcd_puts(buffer);
+}
+
+static void inline lcd_display_time_attribute(uint8_t attribute, 
+		uint8_t position, uint8_t line)
+{
+	char buffer[2];
+	lcd_gotoxy(position, line);
+	itoa(attribute/10, buffer, 10);
+	lcd_puts(buffer);
+	itoa(attribute%10, buffer, 10);
+	lcd_puts(buffer);
+}
+
 void set_year()
 {
 	lcd_gotoxy(12,0);
 	lcd_puts("    ");
 	_delay_ms(500);
-	lcd_display_year();
+	if (day < 10)
+		lcd_display_date_attribute(year, 11, 0);
+	else
+		lcd_display_date_attribute(year, 12, 0);
 	_delay_ms(500);
 }
 
@@ -221,7 +244,7 @@ void set_month()
 	lcd_gotoxy(4,0);
 	lcd_puts("   ");
 	_delay_ms(500);
-	lcd_display_month();
+	lcd_display_date_attribute((uint16_t) months[month -1], 12, 0);
 	_delay_ms(500);
 }
 
@@ -230,7 +253,7 @@ void set_day()
 	lcd_gotoxy(8,0);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_day();
+	lcd_display_date_attribute(day, 12, 0);
 	_delay_ms(500);
 }
 
@@ -239,7 +262,7 @@ void set_hour()
 	lcd_gotoxy(4,1);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_hour();
+	lcd_display_date_attribute(hour, 12, 0);
 	_delay_ms(500);
 }
 
@@ -248,7 +271,7 @@ void set_minute()
 	lcd_gotoxy(7,1);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_minute();
+	lcd_display_date_attribute(minute, 12, 0);
 	_delay_ms(500);
 }
 
@@ -257,70 +280,70 @@ void set_second()
 	lcd_gotoxy(10,1);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_second();
+	lcd_display_date_attribute(second, 12, 0);
 	_delay_ms(500);
 }
 
-void lcd_display_month() 
-{
-	lcd_gotoxy(4,0);
-	lcd_puts(months[month -1]);
-}
-
-void lcd_display_day() 
-{
-	char buffer[7];
-	lcd_gotoxy(8,0);
-	itoa(day,buffer, 10);
-	lcd_puts(buffer);
-}
-
-void lcd_display_year() 
-{
-	char buffer[7];
-	lcd_gotoxy(12,0);
-	itoa(year,buffer, 10);
-	lcd_puts(buffer);
-}
-
-void lcd_display_weekday()
-{
-	unsigned char weekday;
-	weekday = day_of_week(year, month, day);
-	lcd_gotoxy(0,0);
-	lcd_puts(weekdays[weekday]);
-}
-
-void lcd_display_hour()
-{
-	char buffer[7];
-	lcd_gotoxy(4,1);
-	itoa(hour/10, buffer, 10);
-	lcd_puts(buffer);
-	itoa(hour%10 , buffer, 10);
-	lcd_puts(buffer);
-}
-
-void lcd_display_minute()
-{
-	char buffer[7];
-	lcd_gotoxy(7,1);
-	itoa(minute/10, buffer, 10);
-	lcd_puts(buffer);
-	itoa(minute%10, buffer, 10);
-	lcd_puts(buffer);
-}
-
-void lcd_display_second()
-{
-	char buffer[7];
-	lcd_gotoxy(10,1);
-	itoa(second/10, buffer, 10);	
-	lcd_puts(buffer);
-	itoa(second%10, buffer, 10);	 
-	lcd_puts(buffer);
-}
-
+//void lcd_display_month() 
+//{
+//	lcd_gotoxy(4,0);
+//	lcd_puts(months[month -1]);
+//}
+//
+//void lcd_display_day() 
+//{
+//	char buffer[7];
+//	lcd_gotoxy(8,0);
+//	itoa(day,buffer, 10);
+//	lcd_puts(buffer);
+//}
+//
+//void lcd_display_year() 
+//{
+//	char buffer[7];
+//	lcd_gotoxy(12,0);
+//	itoa(year,buffer, 10);
+//	lcd_puts(buffer);
+//}
+//
+//void lcd_display_weekday()
+//{
+//	unsigned char weekday;
+//	weekday = day_of_week(year, month, day);
+//	lcd_gotoxy(0,0);
+//	lcd_puts(weekdays[weekday]);
+//}
+//
+//void lcd_display_hour()
+//{
+//	char buffer[7];
+//	lcd_gotoxy(4,1);
+//	itoa(hour/10, buffer, 10);
+//	lcd_puts(buffer);
+//	itoa(hour%10 , buffer, 10);
+//	lcd_puts(buffer);
+//}
+//
+//void lcd_display_minute()
+//{
+//	char buffer[7];
+//	lcd_gotoxy(7,1);
+//	itoa(minute/10, buffer, 10);
+//	lcd_puts(buffer);
+//	itoa(minute%10, buffer, 10);
+//	lcd_puts(buffer);
+//}
+//
+//void lcd_display_second()
+//{
+//	char buffer[7];
+//	lcd_gotoxy(10,1);
+//	itoa(second/10, buffer, 10);	
+//	lcd_puts(buffer);
+//	itoa(second%10, buffer, 10);	 
+//	lcd_puts(buffer);
+//}
+//
 char day_of_week(int year, char month, char day)
 {
 	static char table[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
@@ -384,20 +407,31 @@ char leap_year(int year) {
 
 void lcd_display_clock() 
 {
-	lcd_display_weekday();
+	lcd_display_date_attribute((uint16_t) day_of_week(year,month,day),
+			0, 0);
+	//lcd_display_weekday();
 	lcd_putc(' ');
-	lcd_display_month();
+	lcd_display_date_attribute((uint16_t) months[month -1], 4, 0);
+	//lcd_display_month();
 	lcd_putc(' ');
-	lcd_display_day();
+	lcd_display_date_attribute(day, 8, 0);
+	//lcd_display_day();
 	lcd_putc(',');
 	lcd_putc(' ');
-	lcd_display_year();
+	//lcd_display_year();
+	if (day < 10)
+		lcd_display_date_attribute(year, 11, 0);
+	else
+		lcd_display_date_attribute(year, 12, 0);
 	lcd_putc('\n');
-	lcd_display_hour();
+	//lcd_display_hour();
+	//lcd_display_time_attribute(hour, 4, 1);
 	lcd_putc(':');
-	lcd_display_minute();
+	//lcd_display_time_attribute(minute, 7, 1);
+	//lcd_display_minute();
 	lcd_putc(':');
-	lcd_display_second();
+	//lcd_display_time_attribute(second, 10, 1);
+	//lcd_display_second();
 	lcd_putc('\n');
 }
 
