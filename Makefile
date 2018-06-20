@@ -24,7 +24,8 @@ OBJECTS    = clock.o lcd.o
 #     	we are now using an external 4MHz clock
 #FUSES      = -U hfuse:w:0x99:m -U lfuse:w:0xe5:m -U efuse:w:0xff:m
 #FIXME 	This is the factory settings for the atmega162
-FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
+#FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
+FUSES      = -U lfuse:w:0xFD:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
 
 
 
