@@ -18,13 +18,13 @@
 //
 volatile unsigned int year = 2018;
 volatile unsigned char month = 6;
-volatile unsigned char day = 11;
-volatile unsigned char hour = 15;
-volatile unsigned char minute = 13;
+volatile unsigned char day = 20;
+volatile unsigned char hour = 19;
+volatile unsigned char minute = 47;
 volatile unsigned char second = 0;
 volatile unsigned char lastdom;
 volatile unsigned char daylight_time = 0;
-volatile unsigned char set_time = 0;
+volatile unsigned char set_time = 6;
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
@@ -197,19 +197,11 @@ int main(void)
 			}
 			break;
 		case 6:
+			lcd_display_clock();
 			//sleep_mode();
 			break;
 		}
 	}
-}
-
-static void inline lcd_display_date_attribute(uint8_t attribute, 
-		uint8_t position, uint8_t line)
-{
-	char buffer[5];
-	lcd_gotoxy(position, line);
-	itoa(attribute, buffer, 10);
-	lcd_puts(buffer);
 }
 
 static void inline lcd_display_time_attribute(uint8_t attribute, 
@@ -223,124 +215,93 @@ static void inline lcd_display_time_attribute(uint8_t attribute,
 	lcd_puts(buffer);
 }
 
-void set_year()
+static void inline set_year()
 {
-	lcd_gotoxy(12,0);
-	lcd_puts("    ");
+	lcd_display_year();
 	_delay_ms(500);
-	if (day < 10)
-		lcd_display_date_attribute(year, 11, 0);
-	else
-		lcd_display_date_attribute(year, 12, 0);
+	lcd_puts("    ");
 	_delay_ms(500);
 }
 
-void set_month()
+static void inline set_month()
 {
 	lcd_gotoxy(4,0);
 	lcd_puts("   ");
 	_delay_ms(500);
-	lcd_display_date_attribute((uint16_t) months[month -1], 12, 0);
+	lcd_display_month();
 	_delay_ms(500);
 }
 
-void set_day()
+static void inline set_day()
 {
 	lcd_gotoxy(8,0);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_date_attribute(day, 12, 0);
+	lcd_display_day();
 	_delay_ms(500);
 }
 
-void set_hour()
+static void inline set_hour()
 {
 	lcd_gotoxy(4,1);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_date_attribute(hour, 12, 0);
+	lcd_display_time_attribute(hour, 4, 1);
 	_delay_ms(500);
 }
 
-void set_minute()
+static void inline set_minute()
 {
 	lcd_gotoxy(7,1);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_date_attribute(minute, 12, 0);
+	lcd_display_time_attribute(minute, 7, 1);
 	_delay_ms(500);
 }
 
-void set_second()
+static void inline set_second()
 {
 	lcd_gotoxy(10,1);
 	lcd_puts("  ");
 	_delay_ms(500);
-	lcd_display_date_attribute(second, 12, 0);
+	lcd_display_time_attribute(second, 10, 1);
 	_delay_ms(500);
 }
 
-//void lcd_display_month() 
-//{
-//	lcd_gotoxy(4,0);
-//	lcd_puts(months[month -1]);
-//}
-//
-//void lcd_display_day() 
-//{
-//	char buffer[7];
-//	lcd_gotoxy(8,0);
-//	itoa(day,buffer, 10);
-//	lcd_puts(buffer);
-//}
-//
-//void lcd_display_year() 
-//{
-//	char buffer[7];
-//	lcd_gotoxy(12,0);
-//	itoa(year,buffer, 10);
-//	lcd_puts(buffer);
-//}
-//
-//void lcd_display_weekday()
-//{
-//	unsigned char weekday;
-//	weekday = day_of_week(year, month, day);
-//	lcd_gotoxy(0,0);
-//	lcd_puts(weekdays[weekday]);
-//}
-//
-//void lcd_display_hour()
-//{
-//	char buffer[7];
-//	lcd_gotoxy(4,1);
-//	itoa(hour/10, buffer, 10);
-//	lcd_puts(buffer);
-//	itoa(hour%10 , buffer, 10);
-//	lcd_puts(buffer);
-//}
-//
-//void lcd_display_minute()
-//{
-//	char buffer[7];
-//	lcd_gotoxy(7,1);
-//	itoa(minute/10, buffer, 10);
-//	lcd_puts(buffer);
-//	itoa(minute%10, buffer, 10);
-//	lcd_puts(buffer);
-//}
-//
-//void lcd_display_second()
-//{
-//	char buffer[7];
-//	lcd_gotoxy(10,1);
-//	itoa(second/10, buffer, 10);	
-//	lcd_puts(buffer);
-//	itoa(second%10, buffer, 10);	 
-//	lcd_puts(buffer);
-//}
-//
-char day_of_week(int year, char month, char day)
+static void inline lcd_display_day() 
+{
+     char buffer[3];
+     lcd_gotoxy(8,0);
+     itoa(day,buffer, 10);
+     lcd_puts(buffer);
+}
+
+static void inline lcd_display_month() 
+{
+	lcd_gotoxy(4,0);
+	lcd_puts(months[month -1]);
+}
+
+static void inline lcd_display_year() 
+{
+	char buffer[5];
+	if (day < 10)
+		lcd_gotoxy(11,0);
+	else 
+		lcd_gotoxy(12,0);
+	itoa(year,buffer, 10);
+	lcd_puts(buffer);
+}
+
+static void inline lcd_display_weekday()
+{
+	unsigned char weekday;
+	weekday = day_of_week(year, month, day);
+	lcd_gotoxy(0,0);
+	lcd_puts(weekdays[weekday]);
+}
+
+static char inline day_of_week(int year, char month, char day)
 {
 	static char table[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
 	year -= month < 3;
@@ -374,7 +335,7 @@ char day_of_week(int year, char month, char day)
 //
 //   For more information, please refer to https://unlicense.org 
 
-char day_of_month(int year, char month, char dow, char week){
+static char inline day_of_month(int year, char month, char dow, char week){
 	char target_date = 1;
 	char first_dow = day_of_week(year, month, target_date);
 	while (first_dow != dow){
@@ -387,47 +348,35 @@ char day_of_month(int year, char month, char dow, char week){
 }
 
 // return the day of the first Sunday in November
-char fall_savings(void) {
+static char inline fall_savings(void) {
 	return (day_of_month(year,month,day_of_week(year,month,day), 0));
 }
 
 // return the day of the second Sunday in March
-char spring_savings(void) {
+static char inline spring_savings(void) {
 	return (day_of_month(year,month,day_of_week(year,month,day), 1));
 }
 
 // https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week
-char leap_year(int year) {
+static char inline leap_year(int year) {
 	return (((year%4 == 0 && year%100 != 0) || year%400 ==0));
 }
 
-void lcd_display_clock() 
+static void inline lcd_display_clock() 
 {
-	lcd_display_date_attribute((uint16_t) day_of_week(year,month,day),
-			0, 0);
-	//lcd_display_weekday();
+	lcd_display_weekday();
 	lcd_putc(' ');
-	lcd_display_date_attribute((uint16_t) months[month -1], 4, 0);
-	//lcd_display_month();
+	lcd_display_month();
 	lcd_putc(' ');
-	lcd_display_date_attribute(day, 8, 0);
-	//lcd_display_day();
+	lcd_display_day();
 	lcd_putc(',');
 	lcd_putc(' ');
-	//lcd_display_year();
-	if (day < 10)
-		lcd_display_date_attribute(year, 11, 0);
-	else
-		lcd_display_date_attribute(year, 12, 0);
-	lcd_putc('\n');
-	//lcd_display_hour();
-	//lcd_display_time_attribute(hour, 4, 1);
+	lcd_display_year();
+	lcd_display_time_attribute(hour, 4, 1);
 	lcd_putc(':');
-	//lcd_display_time_attribute(minute, 7, 1);
-	//lcd_display_minute();
+	lcd_display_time_attribute(minute, 7, 1);
 	lcd_putc(':');
-	//lcd_display_time_attribute(second, 10, 1);
-	//lcd_display_second();
+	lcd_display_time_attribute(second, 10, 1);
 	lcd_putc('\n');
 }
 
@@ -479,5 +428,4 @@ ISR(TIMER1_COMPA_vect)
 			}
 		}
 	}
-	lcd_display_clock();
 }
