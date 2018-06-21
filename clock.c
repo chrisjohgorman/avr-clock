@@ -17,14 +17,14 @@
 // Add hour minute second
 //
 volatile unsigned int year = 2018;
-volatile unsigned char month = 6;
-volatile unsigned char day = 20;
-volatile unsigned char hour = 19;
-volatile unsigned char minute = 47;
-volatile unsigned char second = 0;
-volatile unsigned char lastdom;
-volatile unsigned char daylight_time = 0;
-volatile unsigned char set_time = 6;
+volatile uint8_t month = 6;
+volatile uint8_t day = 20;
+volatile uint8_t hour = 19;
+volatile uint8_t minute = 47;
+volatile uint8_t second = 0;
+volatile uint8_t lastdom;
+volatile uint8_t daylight_time = 0;
+volatile uint8_t set_time = 6;
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 const char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
@@ -295,7 +295,7 @@ static void inline lcd_display_year()
 
 static void inline lcd_display_weekday()
 {
-	unsigned char weekday;
+	uint8_t weekday;
 	weekday = day_of_week(year, month, day);
 	lcd_gotoxy(0,0);
 	lcd_puts(weekdays[weekday]);
