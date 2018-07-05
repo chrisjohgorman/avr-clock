@@ -19,12 +19,13 @@
 DEVICE     = atmega162
 CLOCK      = 1000000
 PROGRAMMER = -c usbtiny -P usb
-OBJECTS    = clock.o lcd.o
+OBJECTS    = debounce.o clock.o lcd.o
 #FIXME 	The next line is used with 32768Hz clock, shouldn't be needed as 
 #     	we are now using an external 4MHz clock
 #FUSES      = -U hfuse:w:0x99:m -U lfuse:w:0xe5:m -U efuse:w:0xff:m
 #FIXME 	This is the factory settings for the atmega162
 #FUSES      = -U lfuse:w:0x62:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
+#FIXME  This is the setting for an external 4MHz clock
 FUSES      = -U lfuse:w:0xFD:m -U hfuse:w:0x99:m -U efuse:w:0xff:m
 
 
