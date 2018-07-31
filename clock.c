@@ -24,10 +24,10 @@
 // Add hour minute second
 //
 volatile uint16_t year = 2018;
-volatile uint8_t month = 6;
-volatile uint8_t hour = 19;
-volatile uint8_t minute = 47;
-volatile uint8_t day = 20;
+volatile uint8_t month = 1;
+volatile uint8_t hour = 0;
+volatile uint8_t minute = 0;
+volatile uint8_t day = 1;
 volatile uint8_t second = 0;
 volatile uint8_t lastdom;
 volatile uint8_t daylight_time = 0;
@@ -152,11 +152,11 @@ int main(void)
 			}
 			// if button press down
 			// 	hour--
-			// 	if hour == -1
+			// 	if hour == 255
 			// 		hour = 23
 			if (button_down(BUTTON2_MASK)) {
 				hour--;
-				if (hour < 0)
+				if (hour == 255)
 					hour = 23;
 			}
 			break;
@@ -164,20 +164,20 @@ int main(void)
 			// if button press up
 			// 	minute++
 			// 	if minute == 60
-			// 		minute = 1
+			// 		minute = 0
 			set_minute();
 			if (button_down(BUTTON1_MASK)) {
 				minute++;
 				if (minute == 60)
-					minute = 1;
+					minute = 0;
 			}
 			// if button press down
 			// 	minute--
-			// 	if minute == -1
+			// 	if minute == 255
 			//		minute = 59
 			if (button_down(BUTTON2_MASK)) {
 				minute--;
-				if (minute < 0)
+				if (minute == 255)
 					minute = 59;
 			}
 			break;
