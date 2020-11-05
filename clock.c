@@ -423,12 +423,12 @@ ISR(TIMER1_COMPA_vect)
 						(hour == 1) &&
 						(day == spring_savings())) {
 					hour++;
-                    daylight_time = 0;
+                    			daylight_time = 0;
 				} else if((daylight_time == 1) && (month == 11) &&
 						(hour == 1) &&
 						(day == fall_savings())) {
 					hour--;
-                    daylight_time = 0;
+                    			daylight_time = 0;
 				}
 				hour++;
 				if(hour > 23) {
@@ -441,7 +441,7 @@ ISR(TIMER1_COMPA_vect)
 					if(day > lastdom) {
 						day = 1;
 						month++;
-                        daylight_time = 1;
+                        			daylight_time = 1;
 						if (month > 12) {
 							month = 1;
 							year++;
