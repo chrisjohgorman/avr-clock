@@ -23,14 +23,14 @@
 //
 // Add hour minute second
 //
-volatile uint16_t year = 2018;
+volatile uint16_t year = 2020;
 volatile uint8_t month = 1;
 volatile uint8_t hour = 0;
 volatile uint8_t minute = 0;
 volatile uint8_t day = 1;
 volatile uint8_t second = 0;
 volatile uint8_t lastdom;
-volatile uint8_t daylight_time = 0;
+volatile uint8_t daylight_time = 1;
 volatile uint8_t set_time = 6;
 volatile uint8_t nsubticks = TICS_PER_SECOND;
 
@@ -368,12 +368,12 @@ static char day_of_month(int year, char month, char dow, char week){
 
 // return the day of the first Sunday in November
 static char fall_savings(void) {
-	return (day_of_month(year,month,day_of_week(year,month,day), 0));
+	return (day_of_month(year,month,day_of_week(year,month,day), 1));
 }
 
 // return the day of the second Sunday in March
 static char spring_savings(void) {
-	return (day_of_month(year,month,day_of_week(year,month,day), 1));
+	return (day_of_month(year,month,day_of_week(year,month,day), 2));
 }
 
 // https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week
@@ -413,23 +413,20 @@ ISR(TIMER1_COMPA_vect)
 			if(minute > 59)
 			{
 				minute = 0;
-				// FIXME - should be hour == 2, empirical tests
-				// show that it hour == 1 works?
-				//
+				// Set at hour 1 plus minutes 60 (2 am)
+                //
 				// first Sunday in November decrement hour at 2 am
 				// second Sunday in March increment hour at 2 am
 				// (twice)
 				//
-				if((daylight_time == 0) && (month == 3) &&
+				if((daylight_time == 1) && (month == 3) &&
 						(hour == 1) &&
 						(day == spring_savings())) {
 					hour++;
-					daylight_time = 1;
-				} else if((daylight_time == 0) && (month == 11) &&
+				} else if((daylight_time == 1) && (month == 11) &&
 						(hour == 1) &&
 						(day == fall_savings())) {
 					hour--;
-					daylight_time = 1;
 				}
 				hour++;
 				if(hour > 23) {
