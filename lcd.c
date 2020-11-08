@@ -1,7 +1,7 @@
 /****************************************************************************
  Title:     HD44780U LCD library
  Author:    Peter Fleury <pfleury@gmx.ch>  http://tinyurl.com/peterfleury
- File:	    $Id: lcd.c,v 1.15.2.2 2015/01/17 12:16:05 peter Exp $
+ File:      $Id: lcd.c,v 1.15.2.2 2015/01/17 12:16:05 peter Exp $
  Software:  AVR-GCC 3.3 
  Target:    any AVR device, memory mapped mode only for AT90S4414/8515/Mega
 
@@ -38,7 +38,7 @@
     /* on ATmega64/128 PINF is on port 0x00 and not 0x60 */
     #define PIN(x) ( &PORTF==&(x) ? _SFR_IO8(0x00) : (*(&x - 2)) )
 #else
-	#define PIN(x) (*(&x - 2))    /* address of input register of port x          */
+    #define PIN(x) (*(&x - 2))    /* address of input register of port x          */
 #endif
 
 
@@ -158,10 +158,10 @@ static void lcd_write(uint8_t data,uint8_t rs)
         LCD_DATA2_PORT &= ~_BV(LCD_DATA2_PIN);
         LCD_DATA1_PORT &= ~_BV(LCD_DATA1_PIN);
         LCD_DATA0_PORT &= ~_BV(LCD_DATA0_PIN);
-    	if(data & 0x80) LCD_DATA3_PORT |= _BV(LCD_DATA3_PIN);
-    	if(data & 0x40) LCD_DATA2_PORT |= _BV(LCD_DATA2_PIN);
-    	if(data & 0x20) LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
-    	if(data & 0x10) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);   
+        if(data & 0x80) LCD_DATA3_PORT |= _BV(LCD_DATA3_PIN);
+        if(data & 0x40) LCD_DATA2_PORT |= _BV(LCD_DATA2_PIN);
+        if(data & 0x20) LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
+        if(data & 0x10) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);   
         lcd_e_toggle();
         
         /* output low nibble */
@@ -169,10 +169,10 @@ static void lcd_write(uint8_t data,uint8_t rs)
         LCD_DATA2_PORT &= ~_BV(LCD_DATA2_PIN);
         LCD_DATA1_PORT &= ~_BV(LCD_DATA1_PIN);
         LCD_DATA0_PORT &= ~_BV(LCD_DATA0_PIN);
-    	if(data & 0x08) LCD_DATA3_PORT |= _BV(LCD_DATA3_PIN);
-    	if(data & 0x04) LCD_DATA2_PORT |= _BV(LCD_DATA2_PIN);
-    	if(data & 0x02) LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
-    	if(data & 0x01) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);
+        if(data & 0x08) LCD_DATA3_PORT |= _BV(LCD_DATA3_PIN);
+        if(data & 0x04) LCD_DATA2_PORT |= _BV(LCD_DATA2_PIN);
+        if(data & 0x02) LCD_DATA1_PORT |= _BV(LCD_DATA1_PIN);
+        if(data & 0x01) LCD_DATA0_PORT |= _BV(LCD_DATA0_PIN);
         lcd_e_toggle();        
         
         /* all data pins high (inactive) */
@@ -578,9 +578,9 @@ void lcd_init(uint8_t dispAttr)
 
 #if KS0073_4LINES_MODE
     /* Display with KS0073 controller requires special commands for enabling 4 line mode */
-	lcd_command(KS0073_EXTENDED_FUNCTION_REGISTER_ON);
-	lcd_command(KS0073_4LINES_MODE);
-	lcd_command(KS0073_EXTENDED_FUNCTION_REGISTER_OFF);
+    lcd_command(KS0073_EXTENDED_FUNCTION_REGISTER_ON);
+    lcd_command(KS0073_4LINES_MODE);
+    lcd_command(KS0073_EXTENDED_FUNCTION_REGISTER_OFF);
 #else
     lcd_command(LCD_FUNCTION_DEFAULT);      /* function set: display lines  */
 #endif
