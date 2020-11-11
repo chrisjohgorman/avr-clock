@@ -441,7 +441,7 @@ ISR(TIMER1_COMPA_vect)
                     if(day > lastdom) {
                         day = 1;
                         month++;
-                                    daylight_time = 1;
+                        daylight_time = 1;
                         if (month > 12) {
                             month = 1;
                             year++;
