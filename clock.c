@@ -422,13 +422,13 @@ ISR(TIMER1_COMPA_vect)
                 if((daylight_time == 1) && (month == 3) &&
                         (hour == 1) &&
                         (day == spring_savings())) {
-                    hour++;
-                                daylight_time = 0;
+                            hour++;
+                            daylight_time = 0;
                 } else if((daylight_time == 1) && (month == 11) &&
                         (hour == 1) &&
                         (day == fall_savings())) {
-                    hour--;
-                                daylight_time = 0;
+                            hour--;
+                            daylight_time = 0;
                 }
                 hour++;
                 if(hour > 23) {
