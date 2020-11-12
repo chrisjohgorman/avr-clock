@@ -23,5 +23,16 @@ static char day_of_week(int, char, char);
 static char day_of_month(int, char, char, char);
 static char leap_year(int);
 static void lcd_display_time_attribute(uint8_t, uint8_t, uint8_t);
+static void lcd_display_time_attribute_big(uint8_t, uint8_t);
+static void display_0(uint8_t);
+static void display_1(uint8_t);
+static void display_2(uint8_t);
+static void display_3(uint8_t);
+static void display_4(uint8_t);
+static void display_5(uint8_t);
+static void display_6(uint8_t);
+static void display_7(uint8_t);
+static void display_8(uint8_t);
+static void display_9(uint8_t);
 
 #endif // CLOCK_H

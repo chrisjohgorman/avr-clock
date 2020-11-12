@@ -20,6 +20,17 @@
 #define TICS_PER_SECOND 200
 #define DEBOUNCE_TIME 1000
 
+static const PROGMEM uint8_t extended_character_table[]  =
+{
+    0x07, 0x0F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F,
+    0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x1C, 0x1E, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F,
+    0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x0F, 0x07,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F,
+    0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1F, 0x1E, 0x1C,
+    0x1F, 0x1F, 0x1F, 0x00, 0x00, 0x00, 0x1F, 0x1F,
+    0x1F, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F, 0x1F
+};
 //
 // Add hour minute second
 //
@@ -33,6 +44,7 @@ volatile uint8_t lastdom;
 volatile uint8_t daylight_time = 1;
 volatile uint8_t set_time = 6;
 volatile uint8_t nsubticks = TICS_PER_SECOND;
+volatile uint8_t i;
 
 
 const char *weekdays[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
@@ -59,6 +71,11 @@ int main(void)
     // initialize display, cursor off
     lcd_init(LCD_DISP_ON);
     lcd_clrscr();
+    lcd_command(_BV(LCD_CGRAM));
+    for(i=0; i<64; i++)
+    {
+        lcd_data(pgm_read_byte_near(&extended_character_table[i]));
+    }
 
     for (;;)
     {
@@ -66,7 +83,7 @@ int main(void)
         if (button_down(BUTTON0_MASK))
             set_time++;
 
-        switch (set_time % 7) {
+        switch (set_time % 8) {
         case 0:
             set_year();
             // if button press up
@@ -195,6 +212,9 @@ int main(void)
         case 6:
             lcd_display_clock();
             break;
+        case 7:
+            lcd_display_time_attribute_big(hour, minute);
+            break;
         }
     }
 }
@@ -217,6 +237,7 @@ static void timer_init()
     TCNT1 = 45536;
 }
 
+
 static void lcd_display_time_attribute(uint8_t attribute,
         uint8_t position, uint8_t line)
 {
@@ -226,6 +247,108 @@ static void lcd_display_time_attribute(uint8_t attribute,
     lcd_puts(buffer);
     itoa(attribute%10, buffer, 10);
     lcd_puts(buffer);
+}
+
+static void lcd_display_time_attribute_big(uint8_t hour, uint8_t minute)
+{
+    switch (hour/10) {
+        case 0:
+            display_0(0);
+            break;
+        case 1:
+            display_1(0); 
+            break;
+        case 2:
+            display_2(0);
+            break;
+    }
+
+    switch (hour%10) {
+        case 0:
+            display_0(4);
+            break;
+        case 1:
+            display_1(4); 
+            break;
+        case 2:
+            display_2(4);
+            break;
+        case 3:
+            display_3(4);
+            break;
+        case 4:
+            display_4(4); 
+            break;
+        case 5:
+            display_5(4);
+            break;
+        case 6:
+            display_6(4); 
+            break;
+        case 7:
+            display_7(4);
+            break;
+        case 8:
+            display_8(4);
+            break;
+        case 9:
+            display_9(4); 
+            break;
+    }
+
+    switch (minute/10) {
+        case 0:
+            display_0(8);
+            break;
+        case 1:
+            display_1(8); 
+            break;
+        case 2:
+            display_2(8);
+            break;
+        case 3:
+            display_3(8);
+            break;
+        case 4:
+            display_4(8); 
+            break;
+        case 5:
+            display_5(8);
+            break;
+    }
+
+    switch (minute%10) {
+        case 0:
+            display_0(12);
+            break;
+        case 1:
+            display_1(12); 
+            break;
+        case 2:
+            display_2(12);
+            break;
+        case 3:
+            display_3(12);
+            break;
+        case 4:
+            display_4(12); 
+            break;
+        case 5:
+            display_5(12);
+            break;
+        case 6:
+            display_6(12); 
+            break;
+        case 7:
+            display_7(12);
+            break;
+        case 8:
+            display_8(12);
+            break;
+        case 9:
+            display_9(12); 
+            break;
+    }
 }
 
 static void set_year()
@@ -397,6 +520,146 @@ static void lcd_display_clock()
     lcd_putc(':');
     lcd_display_time_attribute(second, 10, 1);
     lcd_putc('\n');
+}
+
+static void display_0(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(8);
+    lcd_putc(1);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(3);
+    lcd_putc(4);
+    lcd_putc(5);
+    lcd_putc(20);
+}
+
+static void display_1(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(1);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(20);
+    lcd_putc(255);
+    lcd_putc(20);
+    lcd_putc(20);
+}
+
+static void display_2(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(6);
+    lcd_putc(6);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(3);
+    lcd_putc(7);
+    lcd_putc(7);
+    lcd_putc(20);
+}
+
+static void display_3(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(6);
+    lcd_putc(6);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(7);
+    lcd_putc(7);
+    lcd_putc(5);
+    lcd_putc(20);
+}
+
+static void display_4(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(3);
+    lcd_putc(4);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(20);
+    lcd_putc(20);
+    lcd_putc(255);
+    lcd_putc(20);
+}
+
+static void display_5(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(255);
+    lcd_putc(6);
+    lcd_putc(6);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(7);
+    lcd_putc(7);
+    lcd_putc(5);
+    lcd_putc(20);
+}
+
+static void display_6(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(8);
+    lcd_putc(6);
+    lcd_putc(6);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(3);
+    lcd_putc(7);
+    lcd_putc(5);
+    lcd_putc(20);
+}
+
+static void display_7(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(1);
+    lcd_putc(1);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(20);
+    lcd_putc(8);
+    lcd_putc(20);
+    lcd_putc(20);
+}
+
+static void display_8(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(8);
+    lcd_putc(6);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(3);
+    lcd_putc(7);
+    lcd_putc(5);
+    lcd_putc(20);
+}
+
+static void display_9(uint8_t position)
+{
+    lcd_gotoxy(position,0);
+    lcd_putc(8);
+    lcd_putc(6);
+    lcd_putc(2);
+    lcd_putc(20);
+    lcd_gotoxy(position,1);
+    lcd_putc(20);
+    lcd_putc(20);
+    lcd_putc(255);
+    lcd_putc(20);
 }
 
 ISR(TIMER1_COMPA_vect)
