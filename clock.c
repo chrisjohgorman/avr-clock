@@ -83,26 +83,26 @@ int main(void)
         if (button_down(BUTTON0_MASK))
             set_time++;
 
-        switch (set_time % 8) {
+        switch (set_time % 9) {
         case 0:
             set_year();
             // if button press up
             //  year++
-            //  if year == 2118
+            //  if year == 2020
             //      year = 0
             if (button_down(BUTTON1_MASK)) {
                 year++;
-                if (year == 2118)
-                    year = 2018;
+                if (year == 2120)
+                    year = 2020;
             }
             // if button press down
             //      year--
             //  if year == -1
-            //      year == 2118
+            //      year == 2020
             if (button_down(BUTTON2_MASK)) {
                 year--;
                 if (year == -1)
-                    year = 2118;
+                    year = 2020;
             }
             break;
         case 1:
@@ -214,6 +214,9 @@ int main(void)
             break;
         case 7:
             lcd_display_time_attribute_big(hour, minute);
+            break;
+        case 8:
+            lcd_clrscr();
             break;
         }
     }
@@ -357,55 +360,37 @@ static void set_year()
         lcd_gotoxy(11,0);
     else
         lcd_gotoxy(12,0);
-    lcd_puts("    ");
-    _delay_ms(5);
     lcd_display_year();
-    _delay_ms(5);
 }
 
 static void set_month()
 {
     lcd_gotoxy(4,0);
-    lcd_puts("   ");
-    _delay_ms(5);
     lcd_display_month();
-    _delay_ms(5);
 }
 
 static void set_day()
 {
     lcd_gotoxy(8,0);
-    lcd_puts("  ");
-    _delay_ms(5);
     lcd_display_day();
-    _delay_ms(5);
 }
 
 static void set_hour()
 {
     lcd_gotoxy(4,1);
-    lcd_puts("  ");
-    _delay_ms(5);
     lcd_display_time_attribute(hour, 4, 1);
-    _delay_ms(5);
 }
 
 static void set_minute()
 {
     lcd_gotoxy(7,1);
-    lcd_puts("  ");
-    _delay_ms(5);
     lcd_display_time_attribute(minute, 7, 1);
-    _delay_ms(5);
 }
 
 static void set_second()
 {
     lcd_gotoxy(10,1);
-    lcd_puts("  ");
-    _delay_ms(5);
     lcd_display_time_attribute(second, 10, 1);
-    _delay_ms(5);
 }
 
 static void lcd_display_day()
@@ -514,12 +499,20 @@ static void lcd_display_clock()
     lcd_putc(',');
     lcd_putc(' ');
     lcd_display_year();
+    lcd_gotoxy(0,1);
+    lcd_putc(' ');
+    lcd_putc(' ');
+    lcd_putc(' ');
+    lcd_putc(' ');
     lcd_display_time_attribute(hour, 4, 1);
     lcd_putc(':');
     lcd_display_time_attribute(minute, 7, 1);
     lcd_putc(':');
     lcd_display_time_attribute(second, 10, 1);
-    lcd_putc('\n');
+    lcd_putc(' ');
+    lcd_putc(' ');
+    lcd_putc(' ');
+    lcd_putc(' ');
 }
 
 static void display_0(uint8_t position)
